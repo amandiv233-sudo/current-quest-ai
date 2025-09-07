@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { useAIAssistant, useMockTestGenerator } from "@/hooks/useAIAssistant";
 import { 
   MessageCircle, 
   Brain, 
@@ -11,42 +14,137 @@ import {
   BookOpen, 
   HelpCircle,
   TestTube,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
+
+interface ChatMessage {
+  type: 'user' | 'assistant';
+  message: string;
+  time: string;
+}
 
 const sampleQuestions = [
   "Explain the significance of India's G20 presidency",
-  "What are the key features of the new National Education Policy?",
-  "Generate a quiz on recent space missions by ISRO",
-  "Summarize the latest RBI monetary policy changes"
-];
-
-const chatHistory = [
-  {
-    type: "user",
-    message: "Can you explain the Digital India initiative?",
-    time: "2 mins ago"
-  },
-  {
-    type: "assistant", 
-    message: "Digital India is a comprehensive program launched by the Government of India to transform the country into a digitally empowered society. The initiative focuses on three key areas: Digital Infrastructure, Digital Services, and Digital Literacy. Key components include broadband connectivity, mobile connectivity, e-governance services, and digital payment systems.",
-    time: "2 mins ago"
-  }
+  "What are the key features of the new National Education Policy?", 
+  "Summarize the latest RBI monetary policy changes",
+  "What is the impact of Digital India initiative?"
 ];
 
 const AIAssistantSection = () => {
   const [message, setMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [sessionId, setSessionId] = useState<string | undefined>();
   const [showMockTestOptions, setShowMockTestOptions] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedQuestions, setSelectedQuestions] = useState("10");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("medium");
+  const [selectedExamType, setSelectedExamType] = useState("");
+  
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  
+  const { sendMessage: sendAIMessage, loading: aiLoading } = useAIAssistant();
+  const { generateTest, loading: testLoading } = useMockTestGenerator();
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      console.log("Sending message:", message);
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
+  const handleSendMessage = async () => {
+    if (message.trim() && !aiLoading) {
+      const userMessage = message.trim();
       setMessage("");
+      
+      // Add user message to chat
+      const newUserMessage: ChatMessage = {
+        type: 'user',
+        message: userMessage,
+        time: new Date().toLocaleTimeString()
+      };
+      
+      setChatHistory(prev => [...prev, newUserMessage]);
+
+      try {
+        const response = await sendAIMessage(userMessage, sessionId, 'general');
+        
+        // Update session ID if new
+        if (response.sessionId && !sessionId) {
+          setSessionId(response.sessionId);
+        }
+        
+        // Add assistant response to chat
+        const assistantMessage: ChatMessage = {
+          type: 'assistant',
+          message: response.response,
+          time: new Date().toLocaleTimeString()
+        };
+        
+        setChatHistory(prev => [...prev, assistantMessage]);
+        
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to get response from AI assistant. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleQuickQuestion = (question: string) => {
     setMessage(question);
+  };
+
+  const handleGenerateMockTest = async () => {
+    if (!selectedCategory) {
+      toast({
+        title: "Category Required",
+        description: "Please select a category for the mock test.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const result = await generateTest(
+        selectedCategory,
+        parseInt(selectedQuestions),
+        selectedDifficulty as 'easy' | 'medium' | 'hard',
+        selectedExamType || undefined
+      );
+
+      toast({
+        title: "Mock Test Generated!",
+        description: `${result.title} has been created with ${result.totalQuestions} questions.`,
+      });
+
+      // Add message to chat about test generation
+      const testMessage: ChatMessage = {
+        type: 'assistant',
+        message: `🎯 Great! I've generated a mock test for you:\n\n**${result.title}**\n- ${result.totalQuestions} questions\n- Time limit: ${result.timeLimit} minutes\n- Difficulty: ${selectedDifficulty}\n\nThe test has been saved and you can access it anytime. Good luck with your preparation!`,
+        time: new Date().toLocaleTimeString()
+      };
+      
+      setChatHistory(prev => [...prev, testMessage]);
+      setShowMockTestOptions(false);
+      
+      // Reset form
+      setSelectedCategory("");
+      setSelectedQuestions("10");
+      setSelectedDifficulty("medium");
+      setSelectedExamType("");
+
+    } catch (error) {
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate mock test. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -77,7 +175,17 @@ const AIAssistantSection = () => {
             
             <CardContent className="flex-1 flex flex-col">
               {/* Chat History */}
-              <div className="flex-1 space-y-4 mb-4 overflow-y-auto">
+              <div 
+                ref={chatContainerRef}
+                className="flex-1 space-y-4 mb-4 overflow-y-auto max-h-[300px]"
+              >
+                {chatHistory.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>Ask me anything about current affairs!</p>
+                  </div>
+                )}
+                
                 {chatHistory.map((chat, index) => (
                   <div
                     key={index}
@@ -90,11 +198,22 @@ const AIAssistantSection = () => {
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
-                      <p className="text-sm">{chat.message}</p>
+                      <p className="text-sm whitespace-pre-wrap">{chat.message}</p>
                       <span className="text-xs opacity-70 mt-1 block">{chat.time}</span>
                     </div>
                   </div>
                 ))}
+                
+                {aiLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted text-muted-foreground p-3 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm">AI is thinking...</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Input Area */}
@@ -103,11 +222,20 @@ const AIAssistantSection = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Ask any question about current affairs..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                  disabled={aiLoading}
                   className="flex-1"
                 />
-                <Button onClick={handleSendMessage} size="icon">
-                  <Send className="h-4 w-4" />
+                <Button 
+                  onClick={handleSendMessage} 
+                  size="icon"
+                  disabled={aiLoading || !message.trim()}
+                >
+                  {aiLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -132,6 +260,7 @@ const AIAssistantSection = () => {
                       size="sm"
                       className="w-full text-left justify-start h-auto p-3 whitespace-normal"
                       onClick={() => handleQuickQuestion(question)}
+                      disabled={aiLoading}
                     >
                       {question}
                     </Button>
@@ -151,7 +280,7 @@ const AIAssistantSection = () => {
               <CardContent>
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Create personalized quizzes based on your preferred topics and difficulty level
+                    Create personalized quizzes based on recent current affairs
                   </p>
                   
                   {!showMockTestOptions ? (
@@ -159,6 +288,7 @@ const AIAssistantSection = () => {
                       variant="hero" 
                       className="w-full"
                       onClick={() => setShowMockTestOptions(true)}
+                      disabled={testLoading}
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
                       Create Mock Test
@@ -166,35 +296,93 @@ const AIAssistantSection = () => {
                   ) : (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm font-medium mb-2 block">Select Category</label>
-                        <select className="w-full p-2 border border-border rounded-md text-sm">
-                          <option>Banking Exams</option>
-                          <option>SSC Exams</option>
-                          <option>Railway Exams</option>
-                          <option>Defense Exams</option>
-                          <option>General Awareness</option>
-                        </select>
+                        <label className="text-sm font-medium mb-2 block">Category *</label>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Defense">Defense</SelectItem>
+                            <SelectItem value="Banking">Banking</SelectItem>
+                            <SelectItem value="Railway">Railway</SelectItem>
+                            <SelectItem value="Science & Tech">Science & Tech</SelectItem>
+                            <SelectItem value="International">International</SelectItem>
+                            <SelectItem value="Sports">Sports</SelectItem>
+                            <SelectItem value="General">General</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Exam Type</label>
+                        <Select value={selectedExamType} onValueChange={setSelectedExamType}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select exam (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="SSC CGL">SSC CGL</SelectItem>
+                            <SelectItem value="Banking">Banking Exams</SelectItem>
+                            <SelectItem value="Railway">Railway Exams</SelectItem>
+                            <SelectItem value="Defense">Defense Exams</SelectItem>
+                            <SelectItem value="UPSC">UPSC</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       
                       <div>
                         <label className="text-sm font-medium mb-2 block">Number of Questions</label>
-                        <select className="w-full p-2 border border-border rounded-md text-sm">
-                          <option>10 Questions</option>
-                          <option>25 Questions</option>
-                          <option>50 Questions</option>
-                          <option>100 Questions</option>
-                        </select>
+                        <Select value={selectedQuestions} onValueChange={setSelectedQuestions}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5 Questions</SelectItem>
+                            <SelectItem value="10">10 Questions</SelectItem>
+                            <SelectItem value="15">15 Questions</SelectItem>
+                            <SelectItem value="25">25 Questions</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Difficulty</label>
+                        <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="easy">Easy</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="hard">Hard</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="flex space-x-2">
-                        <Button variant="default" size="sm" className="flex-1">
-                          <Zap className="h-4 w-4 mr-2" />
-                          Generate Test
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={handleGenerateMockTest}
+                          disabled={testLoading || !selectedCategory}
+                        >
+                          {testLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="h-4 w-4 mr-2" />
+                              Generate Test
+                            </>
+                          )}
                         </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => setShowMockTestOptions(false)}
+                          disabled={testLoading}
                         >
                           Cancel
                         </Button>
@@ -219,7 +407,7 @@ const AIAssistantSection = () => {
                     <BookOpen className="h-5 w-5 text-accent" />
                     <div>
                       <h4 className="font-medium text-sm">Detailed Explanations</h4>
-                      <p className="text-xs text-muted-foreground">Get clear, simple explanations for complex topics</p>
+                      <p className="text-xs text-muted-foreground">Get clear explanations for complex topics</p>
                     </div>
                   </div>
                   

@@ -1,1 +1,10 @@
 project_id = "rpeinhaejyqssnkhdipa"
+
+[functions.fetch-current-affairs]
+verify_jwt = false
+
+[functions.ai-assistant]
+verify_jwt = false
+
+[functions.generate-mock-test]
+verify_jwt = false
