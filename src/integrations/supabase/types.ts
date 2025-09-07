@@ -14,13 +14,211 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          session_type: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_type?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          session_type?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      current_affairs: {
+        Row: {
+          category: string
+          content: string | null
+          created_at: string
+          exam_relevance: string[] | null
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          priority: string | null
+          published_at: string
+          source: string
+          source_url: string | null
+          subcategory: string | null
+          summary: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          category: string
+          content?: string | null
+          created_at?: string
+          exam_relevance?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          priority?: string | null
+          published_at: string
+          source: string
+          source_url?: string | null
+          subcategory?: string | null
+          summary: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          category?: string
+          content?: string | null
+          created_at?: string
+          exam_relevance?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          priority?: string | null
+          published_at?: string
+          source?: string
+          source_url?: string | null
+          subcategory?: string | null
+          summary?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      mock_tests: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          difficulty: string | null
+          id: string
+          is_public: boolean | null
+          questions: Json
+          time_limit: number | null
+          title: string
+          total_questions: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string | null
+          id?: string
+          is_public?: boolean | null
+          questions: Json
+          time_limit?: number | null
+          title: string
+          total_questions: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string | null
+          id?: string
+          is_public?: boolean | null
+          questions?: Json
+          time_limit?: number | null
+          title?: string
+          total_questions?: number
+        }
+        Relationships: []
+      }
+      user_bookmarks: {
+        Row: {
+          article_id: string | null
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_bookmarks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "current_affairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_test_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string
+          id: string
+          score: number
+          test_id: string | null
+          time_taken: number | null
+          total_questions: number
+          user_id: string | null
+        }
+        Insert: {
+          answers: Json
+          completed_at?: string
+          id?: string
+          score: number
+          test_id?: string | null
+          time_taken?: number | null
+          total_questions: number
+          user_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          score?: number
+          test_id?: string | null
+          time_taken?: number | null
+          total_questions?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_test_attempts_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_view_count: {
+        Args: { article_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
