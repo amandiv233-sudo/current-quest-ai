@@ -20,10 +20,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     console.log('Generating mock test:', { category, numberOfQuestions, difficulty, examType });
@@ -100,28 +100,32 @@ Format your response as a valid JSON object with this structure:
   ]
 }`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const prompt = `${systemPrompt}\n\nBased on these current affairs, create a ${numberOfQuestions}-question mock test:\n\n${currentAffairsContext}`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Based on these current affairs, create a ${numberOfQuestions}-question mock test:\n\n${currentAffairsContext}` }
-        ],
-        max_completion_tokens: 4000,
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 4000,
+          temperature: 0.3,
+        }
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const aiResponse = data.candidates[0].content.parts[0].text;
 
     // Parse the JSON response
     let mockTest;

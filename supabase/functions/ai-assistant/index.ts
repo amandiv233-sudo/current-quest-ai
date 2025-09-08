@@ -20,10 +20,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     console.log('Processing AI assistant request:', { sessionType, message: message.substring(0, 100) });
@@ -62,33 +62,34 @@ serve(async (req) => {
 
     const systemPrompt = systemPrompts[sessionType] || systemPrompts.general;
 
-    // Build conversation context
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...chatHistory,
-      { role: 'user', content: message }
-    ];
+    // Prepare messages for Gemini
+    const prompt = `${systemPrompt}\n\nConversation History:\n${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}\n\nUser: ${message}\n\nAssistant:`;
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Gemini API
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
-        messages: messages,
-        max_completion_tokens: 1000,
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 1000,
+          temperature: 0.7,
+        }
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const aiResponse = data.candidates[0].content.parts[0].text;
 
     // Update chat history
     const updatedHistory = [
