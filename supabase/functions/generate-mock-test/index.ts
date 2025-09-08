@@ -107,13 +107,12 @@ Format your response as a valid JSON object with this structure:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Based on these current affairs, create a ${numberOfQuestions}-question mock test:\n\n${currentAffairsContext}` }
         ],
-        max_tokens: 4000,
-        temperature: 0.3,
+        max_completion_tokens: 4000,
       }),
     });
 
