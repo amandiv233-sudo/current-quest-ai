@@ -85,10 +85,18 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Gemini API error response:', errorText);
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Gemini API response:', JSON.stringify(data, null, 2));
+    
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error('Invalid Gemini API response structure');
+    }
+    
     const aiResponse = data.candidates[0].content.parts[0].text;
 
     // Update chat history
