@@ -90,7 +90,7 @@ serve(async (req) => {
         .from('current_affairs')
         .upsert(allArticles, { 
           onConflict: 'title',
-          ignoreDuplicates: false 
+          ignoreDuplicates: true 
         });
 
       if (error) {

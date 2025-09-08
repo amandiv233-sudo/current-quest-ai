@@ -36,14 +36,22 @@ serve(async (req) => {
       .order('published_at', { ascending: false })
       .limit(20);
 
-    if (!recentArticles || recentArticles.length === 0) {
-      throw new Error(`No current affairs found for category: ${category}`);
-    }
-
     // Prepare context for AI
-    const currentAffairsContext = recentArticles.map(article => 
-      `Title: ${article.title}\nSummary: ${article.summary}\nCategory: ${article.category}\nSubcategory: ${article.subcategory || 'N/A'}\nTags: ${article.tags?.join(', ') || 'N/A'}\n`
-    ).join('\n---\n');
+    let currentAffairsContext;
+    
+    if (!recentArticles || recentArticles.length === 0) {
+      // If no current affairs found, create a fallback test with general knowledge
+      console.log(`No current affairs found for category: ${category}, creating general knowledge test`);
+      
+      currentAffairsContext = `General ${category} knowledge questions based on standard competitive exam patterns. 
+      Focus on fundamental concepts, important facts, and commonly asked questions in ${category} category for competitive exams.
+      Create questions that would typically appear in ${examType || 'competitive'} exams for ${category} category.`;
+    } else {
+      // Prepare context for AI with actual current affairs
+      currentAffairsContext = recentArticles.map(article => 
+        `Title: ${article.title}\nSummary: ${article.summary}\nCategory: ${article.category}\nSubcategory: ${article.subcategory || 'N/A'}\nTags: ${article.tags?.join(', ') || 'N/A'}\n`
+      ).join('\n---\n');
+    }
 
     const difficultyInstructions = {
       easy: 'Create straightforward questions that test basic knowledge and recall.',
