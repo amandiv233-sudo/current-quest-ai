@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,35 @@ const CurrentAffairsSection = () => {
   const [bookmarkedItems, setBookmarkedItems] = useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
+
+  // Listen for category filter events from CategoryGrid
+  useEffect(() => {
+    const handleCategoryFilter = (event: CustomEvent) => {
+      const categoryTitle = event.detail.category;
+      // Map category titles to internal category names
+      const categoryMapping: { [key: string]: string } = {
+        'Railway Exams': 'Railway',
+        'SSC Exams': 'SSC',
+        'Banking Exams': 'Banking', 
+        'Defense Exams': 'Defense',
+        'Books & Authors': 'Books',
+        'Sports': 'Sports',
+        'International': 'International',
+        'Science & Tech': 'Science & Tech',
+        'Awards': 'Awards',
+        'Appointments': 'Appointments',
+        'Important Days': 'Important Days',
+        'General News': 'General',
+        'All': 'All'
+      };
+      
+      const mappedCategory = categoryMapping[categoryTitle] || categoryTitle;
+      setSelectedCategory(mappedCategory);
+    };
+
+    document.addEventListener('categoryFilter', handleCategoryFilter);
+    return () => document.removeEventListener('categoryFilter', handleCategoryFilter);
+  });
 
   const { articles, loading, error, refreshData, incrementViewCount } = useCurrentAffairs(selectedCategory);
 

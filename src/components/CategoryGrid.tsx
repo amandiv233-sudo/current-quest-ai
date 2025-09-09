@@ -103,6 +103,20 @@ const categories = [
 ];
 
 const CategoryGrid = () => {
+  const handleCategoryClick = (categoryTitle: string) => {
+    // Scroll to current affairs section and filter by category
+    const currentAffairsSection = document.getElementById('current-affairs');
+    if (currentAffairsSection) {
+      currentAffairsSection.scrollIntoView({ behavior: 'smooth' });
+      
+      // Dispatch a custom event to update the category filter
+      const categoryEvent = new CustomEvent('categoryFilter', { 
+        detail: { category: categoryTitle } 
+      });
+      document.dispatchEvent(categoryEvent);
+    }
+  };
+
   return (
     <section id="categories" className="py-16 px-4 bg-background">
       <div className="container mx-auto">
@@ -139,7 +153,12 @@ const CategoryGrid = () => {
                     </span>
                   </div>
                 </div>
-                <Button variant="category" size="sm" className="w-full mt-4">
+                <Button 
+                  variant="category" 
+                  size="sm" 
+                  className="w-full mt-4"
+                  onClick={() => handleCategoryClick(category.title)}
+                >
                   View Updates
                 </Button>
               </CardContent>
@@ -148,7 +167,11 @@ const CategoryGrid = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Button variant="hero" size="lg">
+          <Button 
+            variant="hero" 
+            size="lg"
+            onClick={() => handleCategoryClick('All')}
+          >
             View All Categories
           </Button>
         </div>

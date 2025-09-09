@@ -47,10 +47,16 @@ serve(async (req) => {
       Focus on fundamental concepts, important facts, and commonly asked questions in ${category} category for competitive exams.
       Create questions that would typically appear in ${examType || 'competitive'} exams for ${category} category.`;
     } else {
-      // Prepare context for AI with actual current affairs
-      currentAffairsContext = recentArticles.map(article => 
-        `Title: ${article.title}\nSummary: ${article.summary}\nCategory: ${article.category}\nSubcategory: ${article.subcategory || 'N/A'}\nTags: ${article.tags?.join(', ') || 'N/A'}\n`
-      ).join('\n---\n');
+      // Prepare context for AI with actual current affairs including full content
+      currentAffairsContext = recentArticles.map((article, index) => 
+        `ARTICLE ${index + 1}:
+Title: ${article.title}
+Summary: ${article.summary}
+Category: ${article.category}
+Subcategory: ${article.subcategory || 'N/A'}
+Tags: ${article.tags?.join(', ') || 'N/A'}
+Exam Relevance: ${article.exam_relevance?.join(', ') || 'General Competitive Exams'}`
+      ).join('\n\n---\n\n');
     }
 
     const difficultyInstructions = {
@@ -70,14 +76,17 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert test creator for Indian competitive exams. Create a mock test based on the provided current affairs content.
 
-Instructions:
+CRITICAL INSTRUCTIONS:
 - Generate exactly ${numberOfQuestions} multiple choice questions
 - Difficulty level: ${difficulty} - ${difficultyInstructions[difficulty]}
 - Exam focus: ${examType || 'General'} - ${examTypeInstructions[examType] || examTypeInstructions['General']}
 - Each question should have 4 options (A, B, C, D) with only one correct answer
 - Include detailed explanations for each correct answer
-- Questions should be directly related to the current affairs provided
+- Questions MUST be directly based on the specific current affairs articles provided
+- Read each article carefully and create questions about facts, dates, policies, and details mentioned
+- Include the source article title for each question
 - Ensure questions are exam-relevant and test important concepts
+- Return ONLY plain JSON without any markdown formatting or code blocks
 
 Format your response as a valid JSON object with this structure:
 {
@@ -138,9 +147,20 @@ Format your response as a valid JSON object with this structure:
     // Parse the JSON response
     let mockTest;
     try {
-      mockTest = JSON.parse(aiResponse);
+      let responseText = aiResponse;
+      
+      // Clean up the response if it contains markdown code blocks
+      if (responseText.includes('```json')) {
+        responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      }
+      if (responseText.includes('```')) {
+        responseText = responseText.replace(/```\n?/g, '');
+      }
+      
+      mockTest = JSON.parse(responseText.trim());
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
+      console.error('Raw response text:', aiResponse);
       throw new Error('Failed to generate properly formatted test');
     }
 
