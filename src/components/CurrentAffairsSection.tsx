@@ -127,7 +127,7 @@ const CurrentAffairsSection = () => {
             </Button>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Stay updated with the latest developments across all exam categories
+            Exam-focused current affairs with MCQs and key points for competitive exams
           </p>
         </div>
 
@@ -164,25 +164,24 @@ const CurrentAffairsSection = () => {
           </div>
         )}
 
-        {/* News Grid */}
+        {/* Exam-Focused Content Grid */}
         {articles.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {articles.map((news, index) => (
               <Card 
                 key={news.id} 
-                className="group hover:shadow-medium transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in"
+                className="group hover:shadow-medium transition-all duration-300 hover:-translate-y-1 animate-fade-in border-l-4 border-l-primary"
                 style={{ animationDelay: `${index * 0.1}s` }}
-                onClick={() => handleArticleClick(news.id, news.source_url)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs font-semibold">
                         {news.category}
                       </Badge>
-                      {news.subcategory && (
-                        <Badge variant="outline" className="text-xs">
-                          {news.subcategory}
+                      {news.exam_relevance && news.exam_relevance.length > 0 && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                          {news.exam_relevance[0]}
                         </Badge>
                       )}
                       <div className={`w-2 h-2 rounded-full ${getPriorityColor(news.priority)}`} />
@@ -201,24 +200,43 @@ const CurrentAffairsSection = () => {
                       />
                     </Button>
                   </div>
-                  <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
-                    {news.title}
-                  </CardTitle>
                 </CardHeader>
                 
                 <CardContent className="pt-0">
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                    {news.summary}
-                  </p>
-                  
-                  {/* Tags */}
+                  {/* Quick Fact Box */}
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mb-4 rounded">
+                    <h4 className="font-semibold text-blue-800 text-sm mb-1">📚 Exam Key Point</h4>
+                    <p className="text-blue-700 text-sm leading-relaxed">
+                      {news.summary.length > 150 ? news.summary.substring(0, 150) + "..." : news.summary}
+                    </p>
+                  </div>
+
+                  {/* Sample MCQ */}
+                  <div className="bg-purple-50 border border-purple-200 p-3 mb-4 rounded">
+                    <h4 className="font-semibold text-purple-800 text-sm mb-2">🎯 Likely Exam Question</h4>
+                    <p className="text-purple-700 text-sm mb-2">
+                      Which of the following statements about {news.title.split(' ').slice(0, 3).join(' ')} is correct?
+                    </p>
+                    <div className="text-xs text-purple-600 space-y-1">
+                      <div>A) Related to {news.category} sector reforms</div>
+                      <div>B) Announced in {formatDate(news.published_at)}</div>
+                      <div>C) Both A and B are correct</div>
+                      <div>D) None of the above</div>
+                    </div>
+                    <p className="text-xs text-purple-800 font-semibold mt-2">Answer: C</p>
+                  </div>
+
+                  {/* Key Facts */}
                   {news.tags && news.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {news.tags.slice(0, 3).map((tag, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs px-2 py-1">
-                          {tag}
-                        </Badge>
-                      ))}
+                    <div className="mb-4">
+                      <h5 className="text-sm font-semibold text-foreground mb-2">🔑 Key Terms:</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {news.tags.slice(0, 4).map((tag, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs px-2 py-1 bg-yellow-50 text-yellow-800 border-yellow-200">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   )}
                   
@@ -227,10 +245,6 @@ const CurrentAffairsSection = () => {
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3" />
                         <span>{formatDate(news.published_at)}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{formatTime(news.published_at)}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Eye className="h-3 w-3" />
@@ -244,14 +258,18 @@ const CurrentAffairsSection = () => {
 
                   <div className="flex items-center justify-between">
                     <Button 
-                      variant="default" 
+                      variant="outline" 
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleArticleClick(news.id, news.source_url);
+                        if (news.source_url) {
+                          window.open(news.source_url, '_blank');
+                          incrementViewCount(news.id);
+                        }
                       }}
+                      className="text-xs"
                     >
-                      Read Full Article
+                      Read Source
                     </Button>
                     <div className="flex space-x-2">
                       <Button 
@@ -262,7 +280,7 @@ const CurrentAffairsSection = () => {
                           e.stopPropagation();
                           if (navigator.share) {
                             navigator.share({
-                              title: news.title,
+                              title: `Exam Prep: ${news.title}`,
                               text: news.summary,
                               url: news.source_url || window.location.href
                             });
