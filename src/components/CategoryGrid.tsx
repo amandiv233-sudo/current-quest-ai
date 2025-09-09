@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import { 
   Train, 
   Building2, 
@@ -18,6 +19,7 @@ import {
 const categories = [
   {
     title: "Railway Exams",
+    name: "Railway",
     icon: Train,
     description: "RRB NTPC, Group D, ALP",
     color: "bg-blue-500",
@@ -25,6 +27,7 @@ const categories = [
   },
   {
     title: "SSC Exams", 
+    name: "SSC CGL",
     icon: Building2,
     description: "CGL, CHSL, CPO, GD",
     color: "bg-green-500",
@@ -32,6 +35,7 @@ const categories = [
   },
   {
     title: "Banking Exams",
+    name: "Banking",
     icon: GraduationCap,
     description: "IBPS, SBI, RBI, RRB",
     color: "bg-purple-500", 
@@ -39,6 +43,7 @@ const categories = [
   },
   {
     title: "Defense Exams",
+    name: "Defense",
     icon: Shield,
     description: "NDA, CDS, AFCAT",
     color: "bg-red-500",
@@ -46,6 +51,7 @@ const categories = [
   },
   {
     title: "Books & Authors",
+    name: "Books & Authors",
     icon: BookOpen,
     description: "Latest publications",
     color: "bg-orange-500",
@@ -53,6 +59,7 @@ const categories = [
   },
   {
     title: "Sports",
+    name: "Sports",
     icon: Trophy,
     description: "Cricket, Football, Olympics",
     color: "bg-yellow-500",
@@ -60,6 +67,7 @@ const categories = [
   },
   {
     title: "International",
+    name: "International",
     icon: Globe,
     description: "Global affairs & treaties",
     color: "bg-teal-500",
@@ -67,6 +75,7 @@ const categories = [
   },
   {
     title: "Science & Tech",
+    name: "Science",
     icon: Lightbulb,
     description: "Innovation & discoveries",
     color: "bg-indigo-500",
@@ -74,6 +83,7 @@ const categories = [
   },
   {
     title: "Awards",
+    name: "Awards",
     icon: Award,
     description: "Nobel, Padma, National",
     color: "bg-pink-500",
@@ -81,6 +91,7 @@ const categories = [
   },
   {
     title: "Appointments",
+    name: "Politics",
     icon: Users,
     description: "Government & corporate",
     color: "bg-cyan-500",
@@ -88,6 +99,7 @@ const categories = [
   },
   {
     title: "Important Days",
+    name: "General",
     icon: Calendar,
     description: "National & international",
     color: "bg-violet-500",
@@ -95,6 +107,7 @@ const categories = [
   },
   {
     title: "General News",
+    name: "General",
     icon: Newspaper,
     description: "Miscellaneous updates",
     color: "bg-emerald-500",
@@ -153,27 +166,29 @@ const CategoryGrid = () => {
                     </span>
                   </div>
                 </div>
-                <Button 
-                  variant="category" 
-                  size="sm" 
-                  className="w-full mt-4"
-                  onClick={() => handleCategoryClick(category.title)}
-                >
-                  View Updates
-                </Button>
+                <Link to={`/category/${category.name}`} className="w-full mt-4 block">
+                  <Button 
+                    variant="category" 
+                    size="sm" 
+                    className="w-full"
+                  >
+                    View Updates
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
         </div>
 
         <div className="text-center mt-12">
-          <Button 
-            variant="hero" 
-            size="lg"
-            onClick={() => handleCategoryClick('All')}
-          >
-            View All Categories
-          </Button>
+          <Link to="/admin/mcqs">
+            <Button 
+              variant="hero" 
+              size="lg"
+            >
+              Admin MCQ Management
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
