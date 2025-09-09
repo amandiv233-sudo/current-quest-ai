@@ -101,6 +101,69 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_mcqs: {
+        Row: {
+          category: string
+          correct_answer: string
+          created_at: string
+          created_by: string | null
+          difficulty: string | null
+          exam_year: number | null
+          explanation: string
+          id: string
+          is_active: boolean | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+          question_type: string | null
+          subcategory: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          correct_answer: string
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string | null
+          exam_year?: number | null
+          explanation: string
+          id?: string
+          is_active?: boolean | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+          question_type?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          correct_answer?: string
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string | null
+          exam_year?: number | null
+          explanation?: string
+          id?: string
+          is_active?: boolean | null
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          question?: string
+          question_type?: string | null
+          subcategory?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mock_tests: {
         Row: {
           category: string
