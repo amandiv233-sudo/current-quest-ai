@@ -82,11 +82,14 @@ const AdminMCQs = () => {
     e.preventDefault();
     
     try {
+      // Get current user, but allow null for demo purposes
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const mcqData = {
         ...formData,
         exam_year: formData.exam_year ? parseInt(formData.exam_year) : null,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        created_by: user?.id || null  // Allow null for demo/admin usage
       };
 
       if (editingId) {

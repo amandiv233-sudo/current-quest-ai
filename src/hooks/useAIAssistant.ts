@@ -28,7 +28,10 @@ export const useAIAssistant = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
 
       return {
         response: data.response,

@@ -1,9 +1,31 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, MessageCircle, User, Menu, X } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { BookOpen, MessageCircle, User, Menu, X, LogOut, Settings } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -14,9 +36,11 @@ const Header = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
               <BookOpen className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Current Quest AI
-            </span>
+            <Link to="/">
+              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                MCQ Master
+              </span>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
@@ -41,10 +65,36 @@ const Header = () => {
               <MessageCircle className="h-4 w-4 mr-2" />
               AI Chat
             </Button>
-            <Button variant="default" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              Sign In
-            </Button>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="default" size="sm">
+                    <User className="h-4 w-4 mr-2" />
+                    {user.email?.split('@')[0] || 'User'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <Link to="/admin/mcqs">
+                    <DropdownMenuItem>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Admin MCQs
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button variant="default" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -79,10 +129,28 @@ const Header = () => {
                   <MessageCircle className="h-4 w-4 mr-2" />
                   AI Chat
                 </Button>
-                <Button variant="default" size="sm">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Button>
+                
+                {user ? (
+                  <>
+                    <Link to="/admin/mcqs">
+                      <Button variant="outline" size="sm" className="w-full justify-start">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Admin MCQs
+                      </Button>
+                    </Link>
+                    <Button variant="destructive" size="sm" onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <Link to="/auth">
+                    <Button variant="default" size="sm" className="w-full">
+                      <User className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
               </div>
             </nav>
           </div>

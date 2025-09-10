@@ -8,15 +8,15 @@ const HeroSection = () => {
         {/* Main Content */}
         <div className="max-w-4xl mx-auto animate-fade-in">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-            Master Current Affairs with
+            Master MCQs & Current Affairs
             <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-              AI-Powered Learning
+              with MCQ Master
             </span>
           </h1>
           
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Stay updated with daily current affairs, practice with AI-generated mock tests, 
-            and get instant doubt resolution for competitive exams.
+            Practice with curated MCQs, AI-generated questions from current affairs, 
+            and comprehensive mock tests for all competitive exams.
           </p>
 
           {/* CTA Buttons */}
