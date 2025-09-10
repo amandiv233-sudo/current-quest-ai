@@ -182,7 +182,8 @@ Format your response as a valid JSON object with this structure:
         questions: mockTest.questions,
         total_questions: numberOfQuestions,
         time_limit: numberOfQuestions * 1.5, // 1.5 minutes per question
-        is_public: true
+        is_public: true,
+        created_by: null // Allow system-generated tests
       })
       .select('id')
       .single();
