@@ -1,8 +1,7 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import CategoryGrid from "@/components/CategoryGrid";
-import CurrentAffairsSection from "@/components/CurrentAffairsSection";
-import AIAssistantSection from "@/components/AIAssistantSection";
+import { RecentMCQsSection } from "@/components/RecentMCQsSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -11,8 +10,7 @@ const Index = () => {
       <Header />
       <HeroSection />
       <CategoryGrid />
-      <CurrentAffairsSection />
-      <AIAssistantSection />
+      <RecentMCQsSection />
       <Footer />
     </div>
   );

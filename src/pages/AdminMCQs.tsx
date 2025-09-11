@@ -27,6 +27,7 @@ interface ManualMCQ {
   tags?: string[];
   is_active: boolean;
   created_at: string;
+  mcq_date?: string;
 }
 
 const categories = [
@@ -51,7 +52,8 @@ const AdminMCQs = () => {
     difficulty: "medium",
     question_type: "mcq",
     exam_year: "",
-    tags: ""
+    tags: "",
+    mcq_date: new Date().toISOString().split('T')[0]
   });
   const { toast } = useToast();
 
@@ -89,7 +91,8 @@ const AdminMCQs = () => {
         ...formData,
         exam_year: formData.exam_year ? parseInt(formData.exam_year) : null,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        created_by: user?.id || null  // Allow null for demo/admin usage
+        created_by: user?.id || null,  // Allow null for demo/admin usage
+        mcq_date: formData.mcq_date
       };
 
       if (editingId) {
@@ -130,7 +133,8 @@ const AdminMCQs = () => {
         difficulty: "medium",
         question_type: "mcq",
         exam_year: "",
-        tags: ""
+        tags: "",
+        mcq_date: new Date().toISOString().split('T')[0]
       });
 
       fetchMCQs();
@@ -158,7 +162,8 @@ const AdminMCQs = () => {
       difficulty: mcq.difficulty,
       question_type: mcq.question_type,
       exam_year: mcq.exam_year?.toString() || "",
-      tags: mcq.tags?.join(', ') || ""
+      tags: mcq.tags?.join(', ') || "",
+      mcq_date: mcq.mcq_date || new Date().toISOString().split('T')[0]
     });
     setEditingId(mcq.id);
     setShowAddForm(true);
@@ -228,7 +233,8 @@ const AdminMCQs = () => {
       difficulty: "medium",
       question_type: "mcq",
       exam_year: "",
-      tags: ""
+      tags: "",
+      mcq_date: new Date().toISOString().split('T')[0]
     });
   };
 
@@ -320,6 +326,13 @@ const AdminMCQs = () => {
                     placeholder="Tags (comma separated)"
                     value={formData.tags}
                     onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                  />
+
+                  <Input
+                    type="date"
+                    value={formData.mcq_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mcq_date: e.target.value }))}
+                    required
                   />
                 </div>
 

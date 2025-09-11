@@ -112,6 +112,7 @@ export type Database = {
           explanation: string
           id: string
           is_active: boolean | null
+          mcq_date: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -132,6 +133,7 @@ export type Database = {
           explanation: string
           id?: string
           is_active?: boolean | null
+          mcq_date?: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -152,6 +154,7 @@ export type Database = {
           explanation?: string
           id?: string
           is_active?: boolean | null
+          mcq_date?: string | null
           option_a?: string
           option_b?: string
           option_c?: string
