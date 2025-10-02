@@ -234,11 +234,44 @@ const CategoryMCQs = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="manual" className="w-full">
+        {availableDates.length > 0 && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <label className="text-sm font-medium">Filter by Date:</label>
+                </div>
+                <Select value={selectedDate} onValueChange={setSelectedDate}>
+                  <SelectTrigger className="w-full sm:w-64">
+                    <SelectValue placeholder="Select a date" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDates.map((date) => (
+                      <SelectItem key={date} value={date}>
+                        {new Date(date).toLocaleDateString('en-US', { 
+                          weekday: 'short',
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  {manualMCQs.length} question{manualMCQs.length !== 1 ? 's' : ''} available
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual" className="flex items-center gap-2">
+            <TabsTrigger value="all" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              Manual MCQs ({manualMCQs.length})
+              All MCQs ({manualMCQs.length})
             </TabsTrigger>
             <TabsTrigger value="pyqs" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
@@ -246,24 +279,7 @@ const CategoryMCQs = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="manual" className="mt-6">
-            {availableDates.length > 0 && (
-              <div className="mb-6">
-                <label className="text-sm font-medium mb-2 block">Select Date:</label>
-                <Select value={selectedDate} onValueChange={setSelectedDate}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select a date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableDates.map((date) => (
-                      <SelectItem key={date} value={date}>
-                        {new Date(date).toLocaleDateString()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+          <TabsContent value="all" className="mt-6">
             
             <div className="space-y-6">
               {loading ? (
@@ -281,8 +297,11 @@ const CategoryMCQs = () => {
                 <Card>
                   <CardContent className="text-center py-12">
                     <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold mb-2">No MCQs Found</h3>
                     <p className="text-muted-foreground">
-                      {selectedDate ? `No MCQs available for ${new Date(selectedDate).toLocaleDateString()} in ${category} category.` : `No manual MCQs available for ${category} category.`}
+                      {selectedDate 
+                        ? `No MCQs available for ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.` 
+                        : `No MCQs available in ${category} category yet.`}
                     </p>
                   </CardContent>
                 </Card>

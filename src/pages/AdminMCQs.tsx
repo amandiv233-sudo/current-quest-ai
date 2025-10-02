@@ -48,11 +48,7 @@ const AdminMCQs = () => {
     correct_answer: "A",
     explanation: "",
     category: "",
-    subcategory: "",
     difficulty: "medium",
-    question_type: "mcq",
-    exam_year: "",
-    tags: "",
     mcq_date: new Date().toISOString().split('T')[0]
   });
   const { toast } = useToast();
@@ -88,11 +84,18 @@ const AdminMCQs = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       const mcqData = {
-        ...formData,
-        exam_year: formData.exam_year ? parseInt(formData.exam_year) : null,
-        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        created_by: user?.id || null,  // Allow null for demo/admin usage
-        mcq_date: formData.mcq_date
+        question: formData.question,
+        option_a: formData.option_a,
+        option_b: formData.option_b,
+        option_c: formData.option_c,
+        option_d: formData.option_d,
+        correct_answer: formData.correct_answer,
+        explanation: formData.explanation,
+        category: formData.category,
+        difficulty: formData.difficulty,
+        mcq_date: formData.mcq_date,
+        created_by: user?.id || null,
+        is_active: true
       };
 
       if (editingId) {
@@ -129,11 +132,7 @@ const AdminMCQs = () => {
         correct_answer: "A",
         explanation: "",
         category: "",
-        subcategory: "",
         difficulty: "medium",
-        question_type: "mcq",
-        exam_year: "",
-        tags: "",
         mcq_date: new Date().toISOString().split('T')[0]
       });
 
@@ -158,11 +157,7 @@ const AdminMCQs = () => {
       correct_answer: mcq.correct_answer,
       explanation: mcq.explanation,
       category: mcq.category,
-      subcategory: mcq.subcategory || "",
       difficulty: mcq.difficulty,
-      question_type: mcq.question_type,
-      exam_year: mcq.exam_year?.toString() || "",
-      tags: mcq.tags?.join(', ') || "",
       mcq_date: mcq.mcq_date || new Date().toISOString().split('T')[0]
     });
     setEditingId(mcq.id);
@@ -229,11 +224,7 @@ const AdminMCQs = () => {
       correct_answer: "A",
       explanation: "",
       category: "",
-      subcategory: "",
       difficulty: "medium",
-      question_type: "mcq",
-      exam_year: "",
-      tags: "",
       mcq_date: new Date().toISOString().split('T')[0]
     });
   };
@@ -264,133 +255,126 @@ const AdminMCQs = () => {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>{editingId ? 'Edit MCQ' : 'Add New MCQ'}</CardTitle>
+              <CardDescription>Fill in the details to add a new MCQ question</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select 
-                    value={formData.category} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Category *</label>
+                    <Select 
+                      value={formData.category} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                  <Input
-                    placeholder="Subcategory (optional)"
-                    value={formData.subcategory}
-                    onChange={(e) => setFormData(prev => ({ ...prev, subcategory: e.target.value }))}
-                  />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Difficulty *</label>
+                    <Select 
+                      value={formData.difficulty} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="easy">Easy</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                  <Select 
-                    value={formData.difficulty} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="hard">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">MCQ Date *</label>
+                    <Input
+                      type="date"
+                      value={formData.mcq_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, mcq_date: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </div>
 
-                  <Select 
-                    value={formData.question_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, question_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mcq">MCQ</SelectItem>
-                      <SelectItem value="pyq">Previous Year Question</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Input
-                    placeholder="Exam Year (for PYQs)"
-                    type="number"
-                    value={formData.exam_year}
-                    onChange={(e) => setFormData(prev => ({ ...prev, exam_year: e.target.value }))}
-                  />
-
-                  <Input
-                    placeholder="Tags (comma separated)"
-                    value={formData.tags}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                  />
-
-                  <Input
-                    type="date"
-                    value={formData.mcq_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mcq_date: e.target.value }))}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Question *</label>
+                  <Textarea
+                    placeholder="Enter your question here"
+                    value={formData.question}
+                    onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
                     required
+                    rows={3}
                   />
                 </div>
 
-                <Textarea
-                  placeholder="Question"
-                  value={formData.question}
-                  onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
-                  required
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    placeholder="Option A"
-                    value={formData.option_a}
-                    onChange={(e) => setFormData(prev => ({ ...prev, option_a: e.target.value }))}
-                    required
-                  />
-                  <Input
-                    placeholder="Option B"
-                    value={formData.option_b}
-                    onChange={(e) => setFormData(prev => ({ ...prev, option_b: e.target.value }))}
-                    required
-                  />
-                  <Input
-                    placeholder="Option C"
-                    value={formData.option_c}
-                    onChange={(e) => setFormData(prev => ({ ...prev, option_c: e.target.value }))}
-                    required
-                  />
-                  <Input
-                    placeholder="Option D"
-                    value={formData.option_d}
-                    onChange={(e) => setFormData(prev => ({ ...prev, option_d: e.target.value }))}
-                    required
-                  />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Options *</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Option A"
+                      value={formData.option_a}
+                      onChange={(e) => setFormData(prev => ({ ...prev, option_a: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      placeholder="Option B"
+                      value={formData.option_b}
+                      onChange={(e) => setFormData(prev => ({ ...prev, option_b: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      placeholder="Option C"
+                      value={formData.option_c}
+                      onChange={(e) => setFormData(prev => ({ ...prev, option_c: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      placeholder="Option D"
+                      value={formData.option_d}
+                      onChange={(e) => setFormData(prev => ({ ...prev, option_d: e.target.value }))}
+                      required
+                    />
+                  </div>
                 </div>
 
-                <Select 
-                  value={formData.correct_answer} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, correct_answer: value }))}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A">A</SelectItem>
-                    <SelectItem value="B">B</SelectItem>
-                    <SelectItem value="C">C</SelectItem>
-                    <SelectItem value="D">D</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Correct Answer *</label>
+                  <Select 
+                    value={formData.correct_answer} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, correct_answer: value }))}
+                  >
+                    <SelectTrigger className="w-full md:w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A">Option A</SelectItem>
+                      <SelectItem value="B">Option B</SelectItem>
+                      <SelectItem value="C">Option C</SelectItem>
+                      <SelectItem value="D">Option D</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Textarea
-                  placeholder="Explanation"
-                  value={formData.explanation}
-                  onChange={(e) => setFormData(prev => ({ ...prev, explanation: e.target.value }))}
-                  required
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Explanation *</label>
+                  <Textarea
+                    placeholder="Provide a detailed explanation for the correct answer"
+                    value={formData.explanation}
+                    onChange={(e) => setFormData(prev => ({ ...prev, explanation: e.target.value }))}
+                    required
+                    rows={3}
+                  />
+                </div>
 
                 <div className="flex gap-2">
                   <Button type="submit">
@@ -423,9 +407,14 @@ const AdminMCQs = () => {
                     </Badge>
                   </div>
                 </div>
-                <CardDescription>
-                  {mcq.category} {mcq.subcategory && `• ${mcq.subcategory}`}
-                  {mcq.exam_year && ` • Year: ${mcq.exam_year}`}
+                <CardDescription className="flex items-center gap-2">
+                  {mcq.category}
+                  {mcq.mcq_date && (
+                    <>
+                      <span>•</span>
+                      <span>{new Date(mcq.mcq_date).toLocaleDateString()}</span>
+                    </>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -436,20 +425,12 @@ const AdminMCQs = () => {
                   <p><span className="font-semibold">D.</span> {mcq.option_d}</p>
                 </div>
                 
-                <p className="text-green-600 font-semibold mb-2">
-                  Correct Answer: {mcq.correct_answer}
-                </p>
-                <p className="text-sm mb-4">{mcq.explanation}</p>
-
-                {mcq.tags && mcq.tags.length > 0 && (
-                  <div className="flex gap-1 mb-4">
-                    {mcq.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  <p className="text-green-700 font-semibold mb-1">
+                    Correct Answer: {mcq.correct_answer}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{mcq.explanation}</p>
+                </div>
 
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => handleEdit(mcq)}>

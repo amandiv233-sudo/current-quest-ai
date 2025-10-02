@@ -45,27 +45,19 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#current-affairs" className="text-foreground hover:text-primary transition-colors">
-              Current Affairs
-            </a>
             <a href="#categories" className="text-foreground hover:text-primary transition-colors">
               Categories
             </a>
-            <a href="#mock-tests" className="text-foreground hover:text-primary transition-colors">
-              Mock Tests
+            <a href="#practice" className="text-foreground hover:text-primary transition-colors">
+              Practice Questions
             </a>
-            <a href="#ai-assistant" className="text-foreground hover:text-primary transition-colors">
-              AI Assistant
-            </a>
+            <Link to="/admin/mcqs" className="text-foreground hover:text-primary transition-colors">
+              Manage MCQs
+            </Link>
           </nav>
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Button variant="ghost" size="sm">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              AI Chat
-            </Button>
-            
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -112,24 +104,13 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-slide-up">
             <nav className="flex flex-col space-y-3">
-              <a href="#current-affairs" className="text-foreground hover:text-primary transition-colors px-2 py-1">
-                Current Affairs
-              </a>
               <a href="#categories" className="text-foreground hover:text-primary transition-colors px-2 py-1">
                 Categories
               </a>
-              <a href="#mock-tests" className="text-foreground hover:text-primary transition-colors px-2 py-1">
-                Mock Tests
-              </a>
-              <a href="#ai-assistant" className="text-foreground hover:text-primary transition-colors px-2 py-1">
-                AI Assistant
+              <a href="#practice" className="text-foreground hover:text-primary transition-colors px-2 py-1">
+                Practice Questions
               </a>
               <div className="flex flex-col space-y-2 pt-2">
-                <Button variant="ghost" size="sm">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  AI Chat
-                </Button>
-                
                 {user ? (
                   <>
                     <Link to="/admin/mcqs">
