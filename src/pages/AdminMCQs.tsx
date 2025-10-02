@@ -31,8 +31,34 @@ interface ManualMCQ {
 }
 
 const categories = [
-  "SSC CGL", "Banking", "Railway", "Defense", "UPSC", "General",
-  "Politics", "Economy", "Science", "Sports", "International"
+  "Railway Exams",
+  "SSC Exams",
+  "Banking Exams",
+  "Defense Exams",
+  "Books & Authors",
+  "Sports",
+  "International",
+  "Science & Tech",
+  "Awards",
+  "Appointments",
+  "Important Days",
+  "General News",
+  "Static GK"
+];
+
+const staticGKSubcategories = [
+  "Indian Polity & Constitution",
+  "Indian History",
+  "Geography",
+  "Indian Economy",
+  "Important Organizations",
+  "Science & Technology (Basic)",
+  "Awards & Honours",
+  "Books & Authors",
+  "Important Days & Events",
+  "Sports",
+  "Culture & Arts",
+  "Miscellaneous"
 ];
 
 const AdminMCQs = () => {
@@ -48,6 +74,7 @@ const AdminMCQs = () => {
     correct_answer: "A",
     explanation: "",
     category: "",
+    subcategory: "",
     difficulty: "medium",
     mcq_date: new Date().toISOString().split('T')[0]
   });
@@ -92,6 +119,7 @@ const AdminMCQs = () => {
         correct_answer: formData.correct_answer,
         explanation: formData.explanation,
         category: formData.category,
+        subcategory: formData.category === "Static GK" ? formData.subcategory : null,
         difficulty: formData.difficulty,
         mcq_date: formData.mcq_date,
         created_by: user?.id || null,
@@ -132,6 +160,7 @@ const AdminMCQs = () => {
         correct_answer: "A",
         explanation: "",
         category: "",
+        subcategory: "",
         difficulty: "medium",
         mcq_date: new Date().toISOString().split('T')[0]
       });
@@ -157,6 +186,7 @@ const AdminMCQs = () => {
       correct_answer: mcq.correct_answer,
       explanation: mcq.explanation,
       category: mcq.category,
+      subcategory: mcq.subcategory || "",
       difficulty: mcq.difficulty,
       mcq_date: mcq.mcq_date || new Date().toISOString().split('T')[0]
     });
@@ -224,6 +254,7 @@ const AdminMCQs = () => {
       correct_answer: "A",
       explanation: "",
       category: "",
+      subcategory: "",
       difficulty: "medium",
       mcq_date: new Date().toISOString().split('T')[0]
     });
@@ -264,7 +295,9 @@ const AdminMCQs = () => {
                     <label className="text-sm font-medium">Category *</label>
                     <Select 
                       value={formData.category} 
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                      onValueChange={(value) => {
+                        setFormData(prev => ({ ...prev, category: value, subcategory: "" }));
+                      }}
                       required
                     >
                       <SelectTrigger>
@@ -277,6 +310,26 @@ const AdminMCQs = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {formData.category === "Static GK" && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Sub-Category *</label>
+                      <Select 
+                        value={formData.subcategory} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, subcategory: value }))}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select sub-category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {staticGKSubcategories.map(subcat => (
+                            <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Difficulty *</label>

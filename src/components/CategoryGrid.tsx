@@ -19,7 +19,7 @@ import {
 const categories = [
   {
     title: "Railway Exams",
-    name: "Railway",
+    name: "Railway Exams",
     icon: Train,
     description: "RRB NTPC, Group D, ALP",
     color: "bg-blue-500",
@@ -27,7 +27,7 @@ const categories = [
   },
   {
     title: "SSC Exams", 
-    name: "SSC CGL",
+    name: "SSC Exams",
     icon: Building2,
     description: "CGL, CHSL, CPO, GD",
     color: "bg-green-500",
@@ -35,7 +35,7 @@ const categories = [
   },
   {
     title: "Banking Exams",
-    name: "Banking",
+    name: "Banking Exams",
     icon: GraduationCap,
     description: "IBPS, SBI, RBI, RRB",
     color: "bg-purple-500", 
@@ -43,7 +43,7 @@ const categories = [
   },
   {
     title: "Defense Exams",
-    name: "Defense",
+    name: "Defense Exams",
     icon: Shield,
     description: "NDA, CDS, AFCAT",
     color: "bg-red-500",
@@ -75,7 +75,7 @@ const categories = [
   },
   {
     title: "Science & Tech",
-    name: "Science",
+    name: "Science & Tech",
     icon: Lightbulb,
     description: "Innovation & discoveries",
     color: "bg-indigo-500",
@@ -91,7 +91,7 @@ const categories = [
   },
   {
     title: "Appointments",
-    name: "Politics",
+    name: "Appointments",
     icon: Users,
     description: "Government & corporate",
     color: "bg-cyan-500",
@@ -99,7 +99,7 @@ const categories = [
   },
   {
     title: "Important Days",
-    name: "General",
+    name: "Important Days",
     icon: Calendar,
     description: "National & international",
     color: "bg-violet-500",
@@ -107,11 +107,19 @@ const categories = [
   },
   {
     title: "General News",
-    name: "General",
+    name: "General News",
     icon: Newspaper,
     description: "Miscellaneous updates",
     color: "bg-emerald-500",
     count: "120+ Updates"
+  },
+  {
+    title: "Static GK",
+    name: "Static GK",
+    icon: BookOpen,
+    description: "Static General Knowledge",
+    color: "bg-rose-500",
+    count: "500+ Updates"
   }
 ];
 
