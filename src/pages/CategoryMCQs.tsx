@@ -22,6 +22,7 @@ interface ManualMCQ {
   subcategory?: string;
   difficulty: string;
   question_type: string;
+  mcq_type?: string;
   exam_year?: number;
   tags?: string[];
   created_at: string;
@@ -32,6 +33,8 @@ interface ManualMCQ {
 const CategoryMCQs = () => {
   const { category, subcategory } = useParams();
   const [manualMCQs, setManualMCQs] = useState<ManualMCQ[]>([]);
+  const [filteredMCQs, setFilteredMCQs] = useState<ManualMCQ[]>([]);
+  const [currentTab, setCurrentTab] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [disabledQuestions, setDisabledQuestions] = useState<Record<string, boolean>>({});
@@ -51,6 +54,14 @@ const CategoryMCQs = () => {
       fetchManualMCQs();
     }
   }, [category, selectedDate, availableDates]);
+
+  useEffect(() => {
+    if (currentTab === "all") {
+      setFilteredMCQs(manualMCQs.filter(mcq => !mcq.mcq_type || mcq.mcq_type === "General"));
+    } else if (currentTab === "current-affairs") {
+      setFilteredMCQs(manualMCQs.filter(mcq => mcq.mcq_type === "Current Affairs"));
+    }
+  }, [currentTab, manualMCQs]);
 
   const fetchManualMCQs = async () => {
     try {
@@ -286,15 +297,15 @@ const CategoryMCQs = () => {
           </Card>
         )}
 
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="all" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              All MCQs ({manualMCQs.length})
+              All MCQs ({manualMCQs.filter(mcq => !mcq.mcq_type || mcq.mcq_type === "General").length})
             </TabsTrigger>
-            <TabsTrigger value="pyqs" className="flex items-center gap-2">
+            <TabsTrigger value="current-affairs" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
-              Previous Year Questions
+              Current Affairs ({manualMCQs.filter(mcq => mcq.mcq_type === "Current Affairs").length})
             </TabsTrigger>
           </TabsList>
 
@@ -308,8 +319,8 @@ const CategoryMCQs = () => {
                     <p className="text-muted-foreground">Loading MCQs...</p>
                   </CardContent>
                 </Card>
-              ) : manualMCQs.length > 0 ? (
-                manualMCQs.map((mcq) => (
+              ) : filteredMCQs.length > 0 ? (
+                filteredMCQs.map((mcq) => (
                   <ManualMCQCard key={mcq.id} mcq={mcq} />
                 ))
               ) : (
@@ -329,26 +340,24 @@ const CategoryMCQs = () => {
           </TabsContent>
 
 
-          <TabsContent value="pyqs" className="mt-6">
+          <TabsContent value="current-affairs" className="mt-6">
             <div className="space-y-6">
               {loading ? (
                 <Card>
                   <CardContent className="text-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading PYQs...</p>
+                    <p className="text-muted-foreground">Loading Current Affairs...</p>
                   </CardContent>
                 </Card>
-              ) : manualMCQs.filter(mcq => mcq.question_type === 'pyq').length > 0 ? (
-                manualMCQs
-                  .filter(mcq => mcq.question_type === 'pyq')
-                  .map((mcq) => (
-                    <ManualMCQCard key={mcq.id} mcq={mcq} />
-                  ))
+              ) : filteredMCQs.length > 0 ? (
+                filteredMCQs.map((mcq) => (
+                  <ManualMCQCard key={mcq.id} mcq={mcq} />
+                ))
               ) : (
                 <Card>
                   <CardContent className="text-center py-12">
                     <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">No previous year questions available for {category} category.</p>
+                    <p className="text-muted-foreground">No Current Affairs questions available for {category} category yet.</p>
                   </CardContent>
                 </Card>
               )}

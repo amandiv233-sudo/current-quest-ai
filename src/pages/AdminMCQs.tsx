@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { BulkMCQUpload } from "@/components/BulkMCQUpload";
 
 interface ManualMCQ {
   id: string;
@@ -23,6 +25,7 @@ interface ManualMCQ {
   subcategory?: string;
   difficulty: string;
   question_type: string;
+  mcq_type?: string;
   exam_year?: number;
   tags?: string[];
   is_active: boolean;
@@ -76,6 +79,7 @@ const AdminMCQs = () => {
     category: "",
     subcategory: "",
     difficulty: "medium",
+    mcq_type: "General",
     mcq_date: new Date().toISOString().split('T')[0]
   });
   const { toast } = useToast();
@@ -121,6 +125,7 @@ const AdminMCQs = () => {
         category: formData.category,
         subcategory: formData.category === "Static GK" ? formData.subcategory : null,
         difficulty: formData.difficulty,
+        mcq_type: formData.mcq_type,
         mcq_date: formData.mcq_date,
         created_by: user?.id || null,
         is_active: true
@@ -162,6 +167,7 @@ const AdminMCQs = () => {
         category: "",
         subcategory: "",
         difficulty: "medium",
+        mcq_type: "General",
         mcq_date: new Date().toISOString().split('T')[0]
       });
 
@@ -188,10 +194,13 @@ const AdminMCQs = () => {
       category: mcq.category,
       subcategory: mcq.subcategory || "",
       difficulty: mcq.difficulty,
+      mcq_type: mcq.mcq_type || "General",
       mcq_date: mcq.mcq_date || new Date().toISOString().split('T')[0]
     });
     setEditingId(mcq.id);
-    setShowAddForm(true);
+    // Switch to add tab when editing
+    const addTab = document.querySelector('[value="add"]') as HTMLElement;
+    if (addTab) addTab.click();
   };
 
   const handleDelete = async (id: string) => {
@@ -256,6 +265,7 @@ const AdminMCQs = () => {
       category: "",
       subcategory: "",
       difficulty: "medium",
+      mcq_type: "General",
       mcq_date: new Date().toISOString().split('T')[0]
     });
   };
@@ -263,33 +273,34 @@ const AdminMCQs = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="outline" size="sm">
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold">Admin MCQ Management</h1>
-              <p className="text-muted-foreground">Add and manage MCQs for all categories</p>
-            </div>
+        <div className="flex items-center gap-4 mb-8">
+          <Link to="/">
+            <Button variant="outline" size="sm">
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Admin MCQ Management</h1>
+            <p className="text-muted-foreground">Add and manage MCQs for all categories</p>
           </div>
-          <Button onClick={() => setShowAddForm(true)} disabled={showAddForm}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New MCQ
-          </Button>
         </div>
 
-        {showAddForm && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>{editingId ? 'Edit MCQ' : 'Add New MCQ'}</CardTitle>
-              <CardDescription>Fill in the details to add a new MCQ question</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+        <Tabs defaultValue="manage" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="manage">Manage MCQs</TabsTrigger>
+            <TabsTrigger value="add">Add Single MCQ</TabsTrigger>
+            <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="add">
+            <Card>
+              <CardHeader>
+                <CardTitle>{editingId ? 'Edit MCQ' : 'Add New MCQ'}</CardTitle>
+                <CardDescription>Fill in the details to add a new MCQ question</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Category *</label>
@@ -344,6 +355,22 @@ const AdminMCQs = () => {
                         <SelectItem value="easy">Easy</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Type *</label>
+                    <Select 
+                      value={formData.mcq_type} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, mcq_type: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="General">General</SelectItem>
+                        <SelectItem value="Current Affairs">Current Affairs</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -442,8 +469,13 @@ const AdminMCQs = () => {
               </form>
             </CardContent>
           </Card>
-        )}
+          </TabsContent>
 
+          <TabsContent value="bulk">
+            <BulkMCQUpload />
+          </TabsContent>
+
+          <TabsContent value="manage">
         <div className="space-y-6">
           {mcqs.map((mcq) => (
             <Card key={mcq.id} className={mcq.is_active ? '' : 'opacity-50'}>
@@ -462,10 +494,17 @@ const AdminMCQs = () => {
                 </div>
                 <CardDescription className="flex items-center gap-2">
                   {mcq.category}
+                  {mcq.subcategory && <><span>•</span><span>{mcq.subcategory}</span></>}
                   {mcq.mcq_date && (
                     <>
                       <span>•</span>
                       <span>{new Date(mcq.mcq_date).toLocaleDateString()}</span>
+                    </>
+                  )}
+                  {mcq.mcq_type && (
+                    <>
+                      <span>•</span>
+                      <Badge variant="outline" className="ml-1">{mcq.mcq_type}</Badge>
                     </>
                   )}
                 </CardDescription>
@@ -518,6 +557,8 @@ const AdminMCQs = () => {
             </Card>
           )}
         </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

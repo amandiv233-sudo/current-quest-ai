@@ -23,7 +23,7 @@ const categories = [
     icon: Train,
     description: "RRB NTPC, Group D, ALP",
     color: "bg-blue-500",
-    count: "150+ Updates"
+    count: "150+ MCQs"
   },
   {
     title: "SSC Exams", 
@@ -31,7 +31,7 @@ const categories = [
     icon: Building2,
     description: "CGL, CHSL, CPO, GD",
     color: "bg-green-500",
-    count: "200+ Updates"
+    count: "200+ MCQs"
   },
   {
     title: "Banking Exams",
@@ -39,7 +39,7 @@ const categories = [
     icon: GraduationCap,
     description: "IBPS, SBI, RBI, RRB",
     color: "bg-purple-500", 
-    count: "180+ Updates"
+    count: "180+ MCQs"
   },
   {
     title: "Defense Exams",
@@ -47,79 +47,15 @@ const categories = [
     icon: Shield,
     description: "NDA, CDS, AFCAT",
     color: "bg-red-500",
-    count: "120+ Updates"
-  },
-  {
-    title: "Books & Authors",
-    name: "Books & Authors",
-    icon: BookOpen,
-    description: "Latest publications",
-    color: "bg-orange-500",
-    count: "50+ Updates"
-  },
-  {
-    title: "Sports",
-    name: "Sports",
-    icon: Trophy,
-    description: "Cricket, Football, Olympics",
-    color: "bg-yellow-500",
-    count: "80+ Updates"
-  },
-  {
-    title: "International",
-    name: "International",
-    icon: Globe,
-    description: "Global affairs & treaties",
-    color: "bg-teal-500",
-    count: "100+ Updates"
-  },
-  {
-    title: "Science & Tech",
-    name: "Science & Tech",
-    icon: Lightbulb,
-    description: "Innovation & discoveries",
-    color: "bg-indigo-500",
-    count: "90+ Updates"
-  },
-  {
-    title: "Awards",
-    name: "Awards",
-    icon: Award,
-    description: "Nobel, Padma, National",
-    color: "bg-pink-500",
-    count: "40+ Updates"
-  },
-  {
-    title: "Appointments",
-    name: "Appointments",
-    icon: Users,
-    description: "Government & corporate",
-    color: "bg-cyan-500",
-    count: "70+ Updates"
-  },
-  {
-    title: "Important Days",
-    name: "Important Days",
-    icon: Calendar,
-    description: "National & international",
-    color: "bg-violet-500",
-    count: "60+ Updates"
-  },
-  {
-    title: "General News",
-    name: "General News",
-    icon: Newspaper,
-    description: "Miscellaneous updates",
-    color: "bg-emerald-500",
-    count: "120+ Updates"
+    count: "120+ MCQs"
   },
   {
     title: "Static GK",
     name: "Static GK",
     icon: BookOpen,
-    description: "Static General Knowledge",
+    description: "Comprehensive Static Knowledge",
     color: "bg-rose-500",
-    count: "500+ Updates"
+    count: "500+ MCQs"
   }
 ];
 
@@ -155,7 +91,7 @@ const CategoryGrid = () => {
                     <p className="text-sm text-muted-foreground mb-2">
                       {category.description}
                     </p>
-                    <span className="text-xs text-accent font-medium">
+                    <span className="text-xs font-medium text-primary">
                       {category.count}
                     </span>
                   </div>
