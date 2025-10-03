@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import CategoryMCQs from "./pages/CategoryMCQs";
 import AdminMCQs from "./pages/AdminMCQs";
 import Auth from "./pages/Auth";
+import StaticGKSubcategories from "./pages/StaticGKSubcategories";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/static-gk" element={<StaticGKSubcategories />} />
+            <Route path="/category/:category/:subcategory" element={<CategoryMCQs />} />
             <Route path="/category/:category" element={<CategoryMCQs />} />
             <Route path="/admin/mcqs" element={<AdminMCQs />} />
             <Route path="/auth" element={<Auth />} />

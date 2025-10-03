@@ -160,7 +160,10 @@ const CategoryGrid = () => {
                     </span>
                   </div>
                 </div>
-                <Link to={`/category/${category.name}`} className="w-full mt-4 block">
+                <Link 
+                  to={category.name === "Static GK" ? "/static-gk" : `/category/${category.name}`} 
+                  className="w-full mt-4 block"
+                >
                   <Button 
                     variant="category" 
                     size="sm" 

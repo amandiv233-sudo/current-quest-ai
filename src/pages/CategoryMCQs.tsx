@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ChevronLeft, Calendar, Trophy, BookOpen } from "lucide-react";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,11 +30,11 @@ interface ManualMCQ {
 
 
 const CategoryMCQs = () => {
-  const { category } = useParams();
+  const { category, subcategory } = useParams();
   const [manualMCQs, setManualMCQs] = useState<ManualMCQ[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAnswers, setShowAnswers] = useState<Record<string, boolean>>({});
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [disabledQuestions, setDisabledQuestions] = useState<Record<string, boolean>>({});
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableDates, setAvailableDates] = useState<string[]>([]);
 
@@ -53,12 +54,17 @@ const CategoryMCQs = () => {
 
   const fetchManualMCQs = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('manual_mcqs')
         .select('*')
         .eq('category', category)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .eq('is_active', true);
+      
+      if (subcategory) {
+        query = query.eq('subcategory', subcategory);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setManualMCQs(data || []);
@@ -93,13 +99,18 @@ const CategoryMCQs = () => {
   const fetchManualMCQsByDate = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('manual_mcqs')
         .select('*')
         .eq('category', category)
         .eq('is_active', true)
-        .eq('mcq_date', selectedDate)
-        .order('created_at', { ascending: false });
+        .eq('mcq_date', selectedDate);
+      
+      if (subcategory) {
+        query = query.eq('subcategory', subcategory);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setManualMCQs(data || []);
@@ -110,37 +121,50 @@ const CategoryMCQs = () => {
     }
   };
 
-  const handleAnswerSelect = (questionId: string, answer: string) => {
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#22c55e', '#10b981', '#86efac']
+    });
+  };
+
+  const handleAnswerSelect = (questionId: string, answer: string, correctAnswer: string) => {
+    if (disabledQuestions[questionId]) return;
+    
     setSelectedAnswers(prev => ({
       ...prev,
       [questionId]: answer
     }));
-  };
-
-  const toggleAnswer = (questionId: string) => {
-    setShowAnswers(prev => ({
+    
+    setDisabledQuestions(prev => ({
       ...prev,
-      [questionId]: !prev[questionId]
+      [questionId]: true
     }));
+    
+    if (answer === correctAnswer) {
+      triggerConfetti();
+    }
   };
 
   const getAnswerClass = (questionId: string, option: string, correctAnswer: string) => {
     const selected = selectedAnswers[questionId];
-    const showAnswer = showAnswers[questionId];
+    const isDisabled = disabledQuestions[questionId];
     
-    if (!showAnswer) {
-      return selected === option ? 'bg-primary/20 border-primary' : 'border-border hover:bg-accent';
+    if (!isDisabled) {
+      return 'border-border hover:bg-accent cursor-pointer';
     }
     
     if (option === correctAnswer) {
-      return 'bg-green-100 border-green-500 text-green-800';
+      return 'bg-green-100 border-green-500 text-green-800 cursor-not-allowed';
     }
     
     if (selected === option && option !== correctAnswer) {
-      return 'bg-red-100 border-red-500 text-red-800';
+      return 'bg-red-100 border-red-500 text-red-800 cursor-not-allowed';
     }
     
-    return 'border-border';
+    return 'border-border cursor-not-allowed opacity-50';
   };
 
   const ManualMCQCard = ({ mcq }: { mcq: ManualMCQ }) => (
@@ -177,8 +201,9 @@ const CategoryMCQs = () => {
           ].map((option) => (
             <button
               key={option.key}
-              onClick={() => handleAnswerSelect(mcq.id, option.key)}
-              className={`w-full p-3 text-left border-2 rounded-lg transition-colors ${getAnswerClass(mcq.id, option.key, mcq.correct_answer)}`}
+              onClick={() => handleAnswerSelect(mcq.id, option.key, mcq.correct_answer)}
+              disabled={disabledQuestions[mcq.id]}
+              className={`w-full p-3 text-left border-2 rounded-lg transition-all duration-300 ${getAnswerClass(mcq.id, option.key, mcq.correct_answer)}`}
             >
               <span className="font-semibold">{option.key}. </span>
               {option.text}
@@ -186,18 +211,8 @@ const CategoryMCQs = () => {
           ))}
         </div>
         
-        <div className="flex gap-2 mb-3">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => toggleAnswer(mcq.id)}
-          >
-            {showAnswers[mcq.id] ? 'Hide Answer' : 'Show Answer'}
-          </Button>
-        </div>
-
-        {showAnswers[mcq.id] && (
-          <div className="mt-4 p-4 bg-accent rounded-lg">
+        {disabledQuestions[mcq.id] && (
+          <div className="mt-4 p-4 bg-accent rounded-lg animate-fade-in">
             <p className="font-semibold text-green-600 mb-2">
               Correct Answer: {mcq.correct_answer}
             </p>
@@ -229,8 +244,12 @@ const CategoryMCQs = () => {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">{category} MCQs</h1>
-            <p className="text-muted-foreground">Practice questions and current affairs MCQs</p>
+            <h1 className="text-3xl font-bold">
+              {subcategory ? `${subcategory}` : `${category} MCQs`}
+            </h1>
+            <p className="text-muted-foreground">
+              {subcategory ? `Practice ${subcategory} questions` : 'Practice questions and current affairs MCQs'}
+            </p>
           </div>
         </div>
 
