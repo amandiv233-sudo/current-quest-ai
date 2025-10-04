@@ -101,6 +101,65 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_syllabus_mappings: {
+        Row: {
+          created_at: string
+          exam_id: string
+          id: string
+          subcategory: string
+          topic: string | null
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          id?: string
+          subcategory: string
+          topic?: string | null
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          id?: string
+          subcategory?: string
+          topic?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_syllabus_mappings_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       manual_mcqs: {
         Row: {
           category: string
@@ -122,6 +181,7 @@ export type Database = {
           question_type: string | null
           subcategory: string | null
           tags: string[] | null
+          topic: string | null
           updated_at: string
         }
         Insert: {
@@ -144,6 +204,7 @@ export type Database = {
           question_type?: string | null
           subcategory?: string | null
           tags?: string[] | null
+          topic?: string | null
           updated_at?: string
         }
         Update: {
@@ -166,6 +227,7 @@ export type Database = {
           question_type?: string | null
           subcategory?: string | null
           tags?: string[] | null
+          topic?: string | null
           updated_at?: string
         }
         Relationships: []

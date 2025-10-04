@@ -23,6 +23,7 @@ interface ManualMCQ {
   explanation: string;
   category: string;
   subcategory?: string;
+  topic?: string;
   difficulty: string;
   question_type: string;
   mcq_type?: string;
@@ -64,6 +65,95 @@ const staticGKSubcategories = [
   "Miscellaneous"
 ];
 
+const topicsBySubcategory: Record<string, string[]> = {
+  "Indian Polity & Constitution": [
+    "Fundamental Rights & Duties",
+    "Parliament & Legislature",
+    "Judiciary System",
+    "Constitutional Amendments",
+    "Federal Structure",
+    "Emergency Provisions",
+    "Local Governance"
+  ],
+  "Indian History": [
+    "Ancient History",
+    "Medieval History",
+    "Modern History",
+    "Freedom Movement",
+    "Post-Independence India"
+  ],
+  "Geography": [
+    "Physical Geography",
+    "Indian Geography",
+    "World Geography",
+    "Economic Geography",
+    "Environmental Geography"
+  ],
+  "Indian Economy": [
+    "Five-Year Plans",
+    "Banking & RBI",
+    "Budget & Taxation",
+    "Economic Policies",
+    "Agriculture & Industry",
+    "International Trade"
+  ],
+  "Important Organizations": [
+    "Indian Organizations",
+    "International Organizations",
+    "Space & Defense Organizations",
+    "Financial Institutions",
+    "Health & Education Bodies"
+  ],
+  "Science & Technology (Basic)": [
+    "Physics Basics",
+    "Chemistry Basics",
+    "Biology Basics",
+    "Information Technology",
+    "Recent Innovations"
+  ],
+  "Awards & Honours": [
+    "Civilian Awards",
+    "Gallantry Awards",
+    "International Awards",
+    "Sports Awards",
+    "Literary Awards"
+  ],
+  "Books & Authors": [
+    "Indian Authors",
+    "International Authors",
+    "Biographies & Autobiographies",
+    "Famous Books"
+  ],
+  "Important Days & Events": [
+    "National Days",
+    "International Days",
+    "Historical Events",
+    "Observances & Celebrations"
+  ],
+  "Sports": [
+    "Olympics",
+    "Cricket",
+    "Football",
+    "Other Sports",
+    "Sports Trophies & Tournaments"
+  ],
+  "Culture & Arts": [
+    "Classical & Folk Dances",
+    "Music & Musical Forms",
+    "Temples & Monuments",
+    "Festivals",
+    "Art & Architecture",
+    "Indian Cinema"
+  ],
+  "Miscellaneous": [
+    "First in India",
+    "First in World",
+    "International Boundaries",
+    "Famous Personalities",
+    "Inventions & Discoveries"
+  ]
+};
+
 const AdminMCQs = () => {
   const [mcqs, setMcqs] = useState<ManualMCQ[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -78,6 +168,7 @@ const AdminMCQs = () => {
     explanation: "",
     category: "",
     subcategory: "",
+    topic: "",
     difficulty: "medium",
     mcq_type: "General",
     mcq_date: new Date().toISOString().split('T')[0]
@@ -124,6 +215,7 @@ const AdminMCQs = () => {
         explanation: formData.explanation,
         category: formData.category,
         subcategory: formData.category === "Static GK" ? formData.subcategory : null,
+        topic: formData.category === "Static GK" && formData.subcategory ? formData.topic || null : null,
         difficulty: formData.difficulty,
         mcq_type: formData.mcq_type,
         mcq_date: formData.mcq_date,
@@ -166,6 +258,7 @@ const AdminMCQs = () => {
         explanation: "",
         category: "",
         subcategory: "",
+        topic: "",
         difficulty: "medium",
         mcq_type: "General",
         mcq_date: new Date().toISOString().split('T')[0]
@@ -193,6 +286,7 @@ const AdminMCQs = () => {
       explanation: mcq.explanation,
       category: mcq.category,
       subcategory: mcq.subcategory || "",
+      topic: mcq.topic || "",
       difficulty: mcq.difficulty,
       mcq_type: mcq.mcq_type || "General",
       mcq_date: mcq.mcq_date || new Date().toISOString().split('T')[0]
@@ -264,6 +358,7 @@ const AdminMCQs = () => {
       explanation: "",
       category: "",
       subcategory: "",
+      topic: "",
       difficulty: "medium",
       mcq_type: "General",
       mcq_date: new Date().toISOString().split('T')[0]
@@ -323,23 +418,44 @@ const AdminMCQs = () => {
                   </div>
 
                   {formData.category === "Static GK" && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Sub-Category *</label>
-                      <Select 
-                        value={formData.subcategory} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, subcategory: value }))}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select sub-category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {staticGKSubcategories.map(subcat => (
-                            <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Sub-Category *</label>
+                        <Select 
+                          value={formData.subcategory} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, subcategory: value, topic: "" }))}
+                          required
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select sub-category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {staticGKSubcategories.map(subcat => (
+                              <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {formData.subcategory && topicsBySubcategory[formData.subcategory] && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Topic</label>
+                          <Select 
+                            value={formData.topic} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, topic: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select topic (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {topicsBySubcategory[formData.subcategory].map(topic => (
+                                <SelectItem key={topic} value={topic}>{topic}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <div className="space-y-2">

@@ -116,7 +116,7 @@ const StaticGKSubcategories = () => {
                     </p>
                   </div>
                 </div>
-                <Link to={`/category/Static GK/${subcategory.name}`} className="w-full block">
+                <Link to={`/topics/Static GK/${subcategory.name}`} className="w-full block">
                   <Button 
                     variant="category" 
                     size="sm" 

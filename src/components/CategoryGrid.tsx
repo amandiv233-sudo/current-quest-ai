@@ -97,7 +97,11 @@ const CategoryGrid = () => {
                   </div>
                 </div>
                 <Link 
-                  to={category.name === "Static GK" ? "/static-gk" : `/category/${category.name}`} 
+                  to={
+                    category.name === "Static GK" 
+                      ? "/static-gk-subcategories" 
+                      : `/exam-types/${category.name}`
+                  } 
                   className="w-full mt-4 block"
                 >
                   <Button 

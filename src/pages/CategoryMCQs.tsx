@@ -1,13 +1,13 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ChevronLeft, Calendar, Trophy, BookOpen } from "lucide-react";
-import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { XPBar } from "@/components/XPBar";
 
 interface ManualMCQ {
   id: string;
@@ -20,6 +20,7 @@ interface ManualMCQ {
   explanation: string;
   category: string;
   subcategory?: string;
+  topic?: string;
   difficulty: string;
   question_type: string;
   mcq_type?: string;
@@ -31,7 +32,7 @@ interface ManualMCQ {
 
 
 const CategoryMCQs = () => {
-  const { category, subcategory } = useParams();
+  const { category, subcategory, topic } = useParams();
   const [manualMCQs, setManualMCQs] = useState<ManualMCQ[]>([]);
   const [filteredMCQs, setFilteredMCQs] = useState<ManualMCQ[]>([]);
   const [currentTab, setCurrentTab] = useState<string>("all");
@@ -40,6 +41,11 @@ const CategoryMCQs = () => {
   const [disabledQuestions, setDisabledQuestions] = useState<Record<string, boolean>>({});
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableDates, setAvailableDates] = useState<string[]>([]);
+  
+  // XP Bar state
+  const [currentXP, setCurrentXP] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const maxXP = 100;
 
   useEffect(() => {
     if (category) {
@@ -73,6 +79,10 @@ const CategoryMCQs = () => {
       
       if (subcategory) {
         query = query.eq('subcategory', subcategory);
+      }
+      
+      if (topic) {
+        query = query.eq('topic', topic);
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -121,6 +131,10 @@ const CategoryMCQs = () => {
         query = query.eq('subcategory', subcategory);
       }
       
+      if (topic) {
+        query = query.eq('topic', topic);
+      }
+      
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -132,13 +146,31 @@ const CategoryMCQs = () => {
     }
   };
 
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#22c55e', '#10b981', '#86efac']
-    });
+  const playSound = (isCorrect: boolean) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    if (isCorrect) {
+      // Positive sound: ascending notes
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } else {
+      // Negative sound: descending note
+      oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+      oscillator.type = 'sawtooth';
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    }
   };
 
   const handleAnswerSelect = (questionId: string, answer: string, correctAnswer: string) => {
@@ -154,8 +186,18 @@ const CategoryMCQs = () => {
       [questionId]: true
     }));
     
-    if (answer === correctAnswer) {
-      triggerConfetti();
+    const isCorrect = answer === correctAnswer;
+    
+    if (isCorrect) {
+      // Correct answer: increase XP and streak
+      setCurrentXP(prev => Math.min(prev + 10, maxXP));
+      setStreak(prev => prev + 1);
+      playSound(true);
+    } else {
+      // Incorrect answer: reset XP and streak
+      setCurrentXP(0);
+      setStreak(0);
+      playSound(false);
     }
   };
 
@@ -223,20 +265,32 @@ const CategoryMCQs = () => {
         </div>
         
         {disabledQuestions[mcq.id] && (
-          <div className="mt-4 p-4 bg-accent rounded-lg animate-fade-in">
-            <p className="font-semibold text-green-600 mb-2">
-              Correct Answer: {mcq.correct_answer}
-            </p>
-            <p className="text-sm">{mcq.explanation}</p>
-            {mcq.tags && mcq.tags.length > 0 && (
-              <div className="flex gap-1 mt-2">
-                {mcq.tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
+          <div className="mt-4 space-y-3 animate-fade-in">
+            {selectedAnswers[mcq.id] !== mcq.correct_answer && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+                <p className="font-bold text-destructive text-lg">Streak Broken!</p>
               </div>
             )}
+            {selectedAnswers[mcq.id] === mcq.correct_answer && (
+              <div className="p-3 bg-green-100 dark:bg-green-900/20 border border-green-500/20 rounded-lg text-center">
+                <p className="font-bold text-green-600 dark:text-green-400 text-lg">+10 XP</p>
+              </div>
+            )}
+            <div className="p-4 bg-accent rounded-lg">
+              <p className="font-semibold text-green-600 mb-2">
+                Correct Answer: {mcq.correct_answer}
+              </p>
+              <p className="text-sm">{mcq.explanation}</p>
+              {mcq.tags && mcq.tags.length > 0 && (
+                <div className="flex gap-1 mt-2">
+                  {mcq.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </CardContent>
@@ -245,7 +299,8 @@ const CategoryMCQs = () => {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
+      <XPBar currentXP={currentXP} maxXP={maxXP} streak={streak} />
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Link to="/">
@@ -256,10 +311,10 @@ const CategoryMCQs = () => {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">
-              {subcategory ? `${subcategory}` : `${category} MCQs`}
+              {topic ? topic : subcategory ? `${subcategory}` : `${category} MCQs`}
             </h1>
             <p className="text-muted-foreground">
-              {subcategory ? `Practice ${subcategory} questions` : 'Practice questions and current affairs MCQs'}
+              {topic ? `Practice ${topic} questions` : subcategory ? `Practice ${subcategory} questions` : 'Practice questions and current affairs MCQs'}
             </p>
           </div>
         </div>

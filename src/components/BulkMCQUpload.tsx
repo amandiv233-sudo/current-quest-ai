@@ -35,6 +35,8 @@ export const BulkMCQUpload = () => {
         mcq.category = line.replace('Category:', '').trim();
       } else if (line.startsWith('Sub-Category:')) {
         mcq.subcategory = line.replace('Sub-Category:', '').trim();
+      } else if (line.startsWith('Topic:')) {
+        mcq.topic = line.replace('Topic:', '').trim();
       } else if (line.startsWith('Difficulty:')) {
         mcq.difficulty = line.replace('Difficulty:', '').trim().toLowerCase();
       } else if (line.startsWith('MCQ Date:')) {
@@ -121,6 +123,7 @@ export const BulkMCQUpload = () => {
             explanation: mcq.explanation,
             category: mcq.category,
             subcategory: mcq.subcategory || null,
+            topic: mcq.topic || null,
             difficulty: mcq.difficulty,
             mcq_date: mcq.mcq_date || new Date().toISOString().split('T')[0],
             mcq_type: mcq.mcq_type,
@@ -234,6 +237,7 @@ export const BulkMCQUpload = () => {
           <pre className="whitespace-pre-wrap text-xs">
 {`Category: Static GK
 Sub-Category: Awards & Honours
+Topic: Civilian Awards
 Difficulty: Medium
 Type: General
 MCQ Date: 03-10-2025

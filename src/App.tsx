@@ -10,6 +10,9 @@ import CategoryMCQs from "./pages/CategoryMCQs";
 import AdminMCQs from "./pages/AdminMCQs";
 import Auth from "./pages/Auth";
 import StaticGKSubcategories from "./pages/StaticGKSubcategories";
+import TopicsPage from "./pages/TopicsPage";
+import ExamTypesPage from "./pages/ExamTypesPage";
+import ExamSyllabusPage from "./pages/ExamSyllabusPage";
 
 const queryClient = new QueryClient();
 
@@ -22,9 +25,13 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/static-gk" element={<StaticGKSubcategories />} />
+            <Route path="/static-gk-subcategories" element={<StaticGKSubcategories />} />
+            <Route path="/category/:category/:subcategory/:topic" element={<CategoryMCQs />} />
             <Route path="/category/:category/:subcategory" element={<CategoryMCQs />} />
             <Route path="/category/:category" element={<CategoryMCQs />} />
+            <Route path="/topics/:category/:subcategory" element={<TopicsPage />} />
+            <Route path="/exam-types/:category" element={<ExamTypesPage />} />
+            <Route path="/exam/:category/:examId/syllabus" element={<ExamSyllabusPage />} />
             <Route path="/admin/mcqs" element={<AdminMCQs />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
