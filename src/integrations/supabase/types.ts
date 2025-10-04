@@ -136,6 +136,7 @@ export type Database = {
       exams: {
         Row: {
           category: string
+          content_model: string | null
           created_at: string
           description: string | null
           id: string
@@ -144,6 +145,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          content_model?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -152,6 +154,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          content_model?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -173,6 +176,7 @@ export type Database = {
           is_active: boolean | null
           mcq_date: string | null
           mcq_type: string | null
+          month_year: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -196,6 +200,7 @@ export type Database = {
           is_active?: boolean | null
           mcq_date?: string | null
           mcq_type?: string | null
+          month_year?: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -219,6 +224,7 @@ export type Database = {
           is_active?: boolean | null
           mcq_date?: string | null
           mcq_type?: string | null
+          month_year?: string | null
           option_a?: string
           option_b?: string
           option_c?: string
@@ -346,6 +352,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_mcqs_for_exam: {
+        Args: { p_exam_id: string }
+        Returns: {
+          category: string
+          correct_answer: string
+          created_at: string
+          created_by: string | null
+          difficulty: string | null
+          exam_year: number | null
+          explanation: string
+          id: string
+          is_active: boolean | null
+          mcq_date: string | null
+          mcq_type: string | null
+          month_year: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+          question_type: string | null
+          subcategory: string | null
+          tags: string[] | null
+          topic: string | null
+          updated_at: string
+        }[]
+      }
       increment_view_count: {
         Args: { article_id: string }
         Returns: undefined

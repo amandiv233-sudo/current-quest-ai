@@ -13,6 +13,8 @@ import StaticGKSubcategories from "./pages/StaticGKSubcategories";
 import TopicsPage from "./pages/TopicsPage";
 import ExamTypesPage from "./pages/ExamTypesPage";
 import ExamSyllabusPage from "./pages/ExamSyllabusPage";
+import MonthlyCurrentAffairsPage from "./pages/MonthlyCurrentAffairsPage";
+import BankingCurrentAffairsManager from "./pages/BankingCurrentAffairsManager";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +34,9 @@ const App = () => (
             <Route path="/topics/:category/:subcategory" element={<TopicsPage />} />
             <Route path="/exam-types/:category" element={<ExamTypesPage />} />
             <Route path="/exam/:category/:examId/syllabus" element={<ExamSyllabusPage />} />
+            <Route path="/exam/:category/:examId/monthly-current-affairs" element={<MonthlyCurrentAffairsPage />} />
             <Route path="/admin/mcqs" element={<AdminMCQs />} />
+            <Route path="/admin/banking-current-affairs" element={<BankingCurrentAffairsManager />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

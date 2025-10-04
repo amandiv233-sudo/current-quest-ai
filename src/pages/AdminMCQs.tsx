@@ -381,6 +381,24 @@ const AdminMCQs = () => {
           </div>
         </div>
 
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Banking Current Affairs Management</h3>
+                <p className="text-sm text-muted-foreground">
+                  For Banking exams, use the specialized monthly current affairs manager with context-aware bulk upload
+                </p>
+              </div>
+              <Link to="/admin/banking-current-affairs">
+                <Button variant="default">
+                  Go to Banking Manager
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="manage" className="space-y-6">
           <TabsList>
             <TabsTrigger value="manage">Manage MCQs</TabsTrigger>

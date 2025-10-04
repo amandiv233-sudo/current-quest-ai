@@ -46,20 +46,26 @@ const CategoryMCQs = () => {
   const [currentXP, setCurrentXP] = useState(0);
   const [streak, setStreak] = useState(0);
   const maxXP = 100;
+  
+  // Check if this is a month-based view (YYYY-MM format in topic parameter)
+  const isMonthBasedView = topic && /^\d{4}-\d{2}$/.test(topic);
 
   useEffect(() => {
-    if (category) {
+    if (category && !isMonthBasedView) {
       fetchAvailableDates();
     }
-  }, [category]);
+  }, [category, isMonthBasedView]);
 
   useEffect(() => {
-    if (category && selectedDate) {
+    if (isMonthBasedView) {
+      // For month-based views (Banking exams), fetch directly without date selection
+      fetchManualMCQs();
+    } else if (category && selectedDate) {
       fetchManualMCQsByDate();
     } else if (category && availableDates.length === 0) {
       fetchManualMCQs();
     }
-  }, [category, selectedDate, availableDates]);
+  }, [category, subcategory, topic, selectedDate, availableDates, isMonthBasedView]);
 
   useEffect(() => {
     if (currentTab === "all") {
@@ -81,7 +87,12 @@ const CategoryMCQs = () => {
         query = query.eq('subcategory', subcategory);
       }
       
-      if (topic) {
+      // Handle month-based view for Banking exams (YYYY-MM format)
+      if (isMonthBasedView && topic) {
+        // Convert YYYY-MM to first day of month for database query (YYYY-MM-01)
+        const monthDate = `${topic}-01`;
+        query = query.eq('month_year', monthDate);
+      } else if (topic) {
         query = query.eq('topic', topic);
       }
       
@@ -319,7 +330,7 @@ const CategoryMCQs = () => {
           </div>
         </div>
 
-        {availableDates.length > 0 && (
+        {!isMonthBasedView && availableDates.length > 0 && (
           <Card className="mb-6">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

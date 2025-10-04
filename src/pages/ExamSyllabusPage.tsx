@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ChevronLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface Exam {
   name: string;
+  content_model: string;
 }
 
 interface SyllabusItem {
@@ -16,6 +17,7 @@ interface SyllabusItem {
 
 const ExamSyllabusPage = () => {
   const { category, examId } = useParams();
+  const navigate = useNavigate();
   const [exam, setExam] = useState<Exam | null>(null);
   const [syllabusItems, setSyllabusItems] = useState<SyllabusItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,15 +28,21 @@ const ExamSyllabusPage = () => {
 
   const fetchExamAndSyllabus = async () => {
     try {
-      // Fetch exam details
+      // Fetch exam details with content_model
       const { data: examData, error: examError } = await supabase
         .from('exams')
-        .select('name')
+        .select('name, content_model')
         .eq('id', examId)
         .single();
 
       if (examError) throw examError;
       setExam(examData);
+
+      // Redirect to monthly current affairs if this is a banking exam
+      if (examData.content_model === 'monthly_current_affairs') {
+        navigate(`/exam/${category}/${examId}/monthly-current-affairs`);
+        return;
+      }
 
       // Fetch syllabus mappings
       const { data: syllabusData, error: syllabusError } = await supabase
