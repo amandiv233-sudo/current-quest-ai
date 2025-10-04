@@ -9,6 +9,7 @@ interface Exam {
   id: string;
   name: string;
   description: string;
+  content_model: string;
 }
 
 const ExamTypesPage = () => {
@@ -49,7 +50,11 @@ const ExamTypesPage = () => {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">{category}</h1>
-            <p className="text-muted-foreground">Choose an exam to view its syllabus</p>
+            <p className="text-muted-foreground">
+              {category === 'Banking Exams' 
+                ? 'Choose an exam to view monthly current affairs' 
+                : 'Choose an exam to view its syllabus'}
+            </p>
           </div>
         </div>
 
@@ -80,13 +85,22 @@ const ExamTypesPage = () => {
                       </p>
                     </div>
                   </div>
-                  <Link to={`/exam/${category}/${exam.id}/syllabus`} className="w-full block">
+                  <Link 
+                    to={
+                      exam.content_model === 'monthly_current_affairs'
+                        ? `/monthly-current-affairs/${category}/${exam.id}`
+                        : `/exam/${category}/${exam.id}/syllabus`
+                    } 
+                    className="w-full block"
+                  >
                     <Button 
                       variant="category" 
                       size="sm" 
                       className="w-full"
                     >
-                      View Syllabus
+                      {exam.content_model === 'monthly_current_affairs' 
+                        ? 'View Monthly Updates' 
+                        : 'View Syllabus'}
                     </Button>
                   </Link>
                 </CardContent>
