@@ -49,6 +49,14 @@ const CategoryMCQs = () => {
   
   // Check if this is a month-based view (YYYY-MM format in topic parameter)
   const isMonthBasedView = topic && /^\d{4}-\d{2}$/.test(topic);
+  
+  // Format month for display (2025-09 → September 2025)
+  const formatMonthDisplay = (monthStr: string) => {
+    if (!monthStr || !/^\d{4}-\d{2}$/.test(monthStr)) return monthStr;
+    const [year, month] = monthStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
 
   useEffect(() => {
     if (category && !isMonthBasedView) {
@@ -313,21 +321,37 @@ const CategoryMCQs = () => {
     <div className="min-h-screen bg-background pb-24">
       <XPBar currentXP={currentXP} maxXP={maxXP} streak={streak} />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/">
-            <Button variant="outline" size="sm">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.history.back()}
+            >
               <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Home
+              {isMonthBasedView ? "Back to Months" : "Back to Home"}
             </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">
-              {topic ? topic : subcategory ? `${subcategory}` : `${category} MCQs`}
-            </h1>
-            <p className="text-muted-foreground">
-              {topic ? `Practice ${topic} questions` : subcategory ? `Practice ${subcategory} questions` : 'Practice questions and current affairs MCQs'}
-            </p>
+            <div>
+              <h1 className="text-3xl font-bold">
+                {isMonthBasedView ? formatMonthDisplay(topic!) : topic ? topic : subcategory ? `${subcategory}` : `${category} MCQs`}
+              </h1>
+              <p className="text-muted-foreground">
+                {isMonthBasedView 
+                  ? `Practice ${formatMonthDisplay(topic!)} questions` 
+                  : topic ? `Practice ${topic} questions` 
+                  : subcategory ? `Practice ${subcategory} questions` 
+                  : 'Practice questions and current affairs MCQs'}
+              </p>
+            </div>
           </div>
+          
+          {isMonthBasedView && (
+            <Link to={`/admin/banking-current-affairs?exam=${subcategory}&month=${topic}`}>
+              <Button variant="default">
+                Manage MCQs
+              </Button>
+            </Link>
+          )}
         </div>
 
         {!isMonthBasedView && availableDates.length > 0 && (

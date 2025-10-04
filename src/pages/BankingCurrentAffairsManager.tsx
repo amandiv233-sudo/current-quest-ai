@@ -20,6 +20,38 @@ const BankingCurrentAffairsManager = () => {
 
   useEffect(() => {
     fetchBankingExams();
+    
+    // Get URL params to pre-select exam and highlight month
+    const params = new URLSearchParams(window.location.search);
+    const examParam = params.get('exam');
+    const monthParam = params.get('month');
+    
+    if (examParam) {
+      // Find exam by name and set it
+      const fetchAndSetExam = async () => {
+        const { data } = await supabase
+          .from('exams')
+          .select('id')
+          .eq('name', examParam)
+          .single();
+        
+        if (data) {
+          setSelectedExam(data.id);
+        }
+      };
+      fetchAndSetExam();
+    }
+    
+    // Scroll to the month if specified (YYYY-MM format)
+    if (monthParam) {
+      setTimeout(() => {
+        const monthElement = document.getElementById(`month-${monthParam}`);
+        if (monthElement) {
+          monthElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          monthElement.classList.add('ring-2', 'ring-primary');
+        }
+      }, 800);
+    }
   }, []);
 
   const fetchBankingExams = async () => {
@@ -183,7 +215,11 @@ const BankingCurrentAffairsManager = () => {
                 <h3 className="text-lg font-semibold">Upload MCQs by Month</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {months.map((month) => (
-                    <Card key={month.value} className="border-border/50">
+                    <Card 
+                      key={month.value} 
+                      id={`month-${month.displayValue}`}
+                      className="border-border/50 transition-all duration-300"
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
