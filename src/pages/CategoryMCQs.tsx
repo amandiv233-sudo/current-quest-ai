@@ -76,12 +76,16 @@ const CategoryMCQs = () => {
   }, [category, subcategory, topic, selectedDate, availableDates, isMonthBasedView]);
 
   useEffect(() => {
-    if (currentTab === "all") {
+    if (isMonthBasedView) {
+      // For monthly views, always show current affairs only
+      setCurrentTab("current-affairs");
+      setFilteredMCQs(manualMCQs.filter(mcq => mcq.mcq_type === "Current Affairs"));
+    } else if (currentTab === "all") {
       setFilteredMCQs(manualMCQs.filter(mcq => !mcq.mcq_type || mcq.mcq_type === "General"));
     } else if (currentTab === "current-affairs") {
       setFilteredMCQs(manualMCQs.filter(mcq => mcq.mcq_type === "Current Affairs"));
     }
-  }, [currentTab, manualMCQs]);
+  }, [currentTab, manualMCQs, isMonthBasedView]);
 
   const fetchManualMCQs = async () => {
     try {
@@ -97,9 +101,14 @@ const CategoryMCQs = () => {
       
       // Handle month-based view for Banking exams (YYYY-MM format)
       if (isMonthBasedView && topic) {
-        // Convert YYYY-MM to first day of month for database query (YYYY-MM-01)
-        const monthDate = `${topic}-01`;
-        query = query.eq('month_year', monthDate);
+        // Query for any date within the target month (handles any day of month)
+        const [year, month] = topic.split('-');
+        const startDate = `${year}-${month}-01`;
+        const nextMonth = parseInt(month) === 12 ? '01' : String(parseInt(month) + 1).padStart(2, '0');
+        const nextYear = parseInt(month) === 12 ? String(parseInt(year) + 1) : year;
+        const endDate = `${nextYear}-${nextMonth}-01`;
+        
+        query = query.gte('month_year', startDate).lt('month_year', endDate);
       } else if (topic) {
         query = query.eq('topic', topic);
       }
@@ -354,6 +363,20 @@ const CategoryMCQs = () => {
           )}
         </div>
 
+        {/* Show tabs only for non-monthly views OR show only Current Affairs tab for monthly views */}
+        {isMonthBasedView ? (
+          <div className="mb-6">
+            <Card className="bg-card/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-center gap-2">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  <CardTitle>Current Affairs ({filteredMCQs.length})</CardTitle>
+                </div>
+              </CardHeader>
+            </Card>
+          </div>
+        ) : null}
+        
         {!isMonthBasedView && availableDates.length > 0 && (
           <Card className="mb-6">
             <CardContent className="pt-6">
@@ -387,73 +410,106 @@ const CategoryMCQs = () => {
           </Card>
         )}
 
-        <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              All MCQs ({manualMCQs.filter(mcq => !mcq.mcq_type || mcq.mcq_type === "General").length})
-            </TabsTrigger>
-            <TabsTrigger value="current-affairs" className="flex items-center gap-2">
-              <Trophy className="w-4 h-4" />
-              Current Affairs ({manualMCQs.filter(mcq => mcq.mcq_type === "Current Affairs").length})
-            </TabsTrigger>
-          </TabsList>
+        {/* Show tabs only for non-monthly views */}
+        {!isMonthBasedView ? (
+          <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="all" className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                All MCQs ({manualMCQs.filter(mcq => !mcq.mcq_type || mcq.mcq_type === "General").length})
+              </TabsTrigger>
+              <TabsTrigger value="current-affairs" className="flex items-center gap-2">
+                <Trophy className="w-4 h-4" />
+                Current Affairs ({manualMCQs.filter(mcq => mcq.mcq_type === "Current Affairs").length})
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="all" className="mt-6">
-            
-            <div className="space-y-6">
-              {loading ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading MCQs...</p>
-                  </CardContent>
-                </Card>
-              ) : filteredMCQs.length > 0 ? (
-                filteredMCQs.map((mcq) => (
-                  <ManualMCQCard key={mcq.id} mcq={mcq} />
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">No MCQs Found</h3>
-                    <p className="text-muted-foreground">
-                      {selectedDate 
-                        ? `No MCQs available for ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.` 
-                        : `No MCQs available in ${category} category yet.`}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+            <TabsContent value="all" className="mt-6">
+              
+              <div className="space-y-6">
+                {loading ? (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading MCQs...</p>
+                    </CardContent>
+                  </Card>
+                ) : filteredMCQs.length > 0 ? (
+                  filteredMCQs.map((mcq) => (
+                    <ManualMCQCard key={mcq.id} mcq={mcq} />
+                  ))
+                ) : (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <h3 className="text-lg font-semibold mb-2">No MCQs Found</h3>
+                      <p className="text-muted-foreground">
+                        {selectedDate 
+                          ? `No MCQs available for ${new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.` 
+                          : `No MCQs available in ${category} category yet.`}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+
+            <TabsContent value="current-affairs" className="mt-6">
+              <div className="space-y-6">
+                {loading ? (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading Current Affairs...</p>
+                    </CardContent>
+                  </Card>
+                ) : filteredMCQs.length > 0 ? (
+                  filteredMCQs.map((mcq) => (
+                    <ManualMCQCard key={mcq.id} mcq={mcq} />
+                  ))
+                ) : (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground">No Current Affairs questions available for {category} category yet.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          /* For monthly views, show Current Affairs MCQs directly */
+          <div className="space-y-6 mt-6">
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Trophy className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-semibold">Current Affairs MCQs ({filteredMCQs.length})</h2>
             </div>
-          </TabsContent>
-
-
-          <TabsContent value="current-affairs" className="mt-6">
-            <div className="space-y-6">
-              {loading ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading Current Affairs...</p>
-                  </CardContent>
-                </Card>
-              ) : filteredMCQs.length > 0 ? (
-                filteredMCQs.map((mcq) => (
-                  <ManualMCQCard key={mcq.id} mcq={mcq} />
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">No Current Affairs questions available for {category} category yet.</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+            {loading ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading Current Affairs...</p>
+                </CardContent>
+              </Card>
+            ) : filteredMCQs.length > 0 ? (
+              filteredMCQs.map((mcq) => (
+                <ManualMCQCard key={mcq.id} mcq={mcq} />
+              ))
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">No Current Affairs MCQs Found</h3>
+                  <p className="text-muted-foreground">
+                    No Current Affairs questions available for {category} category yet.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
