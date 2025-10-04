@@ -88,7 +88,7 @@ const ExamTypesPage = () => {
                   <Link 
                     to={
                       exam.content_model === 'monthly_current_affairs'
-                        ? `/monthly-current-affairs/${category}/${exam.id}`
+                        ? `/exam/${category}/${exam.id}/monthly-current-affairs`
                         : `/exam/${category}/${exam.id}/syllabus`
                     } 
                     className="w-full block"
