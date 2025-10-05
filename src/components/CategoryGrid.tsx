@@ -99,7 +99,9 @@ const CategoryGrid = () => {
                 <Link 
                   to={
                     category.name === "Static GK" 
-                      ? "/static-gk-subcategories" 
+                      ? "/static-gk-subcategories"
+                      : category.name === "Banking Exams"
+                      ? `/banking-current-affairs`
                       : `/exam-types/${category.name}`
                   } 
                   className="w-full mt-4 block"

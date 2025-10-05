@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ChevronLeft, Calendar, Trophy, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ interface ManualMCQ {
 
 const CategoryMCQs = () => {
   const { category, subcategory, topic } = useParams();
+  const navigate = useNavigate();
   const [manualMCQs, setManualMCQs] = useState<ManualMCQ[]>([]);
   const [filteredMCQs, setFilteredMCQs] = useState<ManualMCQ[]>([]);
   const [currentTab, setCurrentTab] = useState<string>("all");
@@ -47,8 +48,14 @@ const CategoryMCQs = () => {
   const [streak, setStreak] = useState(0);
   const maxXP = 100;
   
-  // Check if this is a month-based view (YYYY-MM format in topic parameter)
-  const isMonthBasedView = topic && /^\d{4}-\d{2}$/.test(topic);
+  // Check if this is a month-based view
+  // Either topic is in YYYY-MM format (old flow) OR subcategory is in YYYY-MM format (new Banking flow)
+  const monthParam = topic && /^\d{4}-\d{2}$/.test(topic) ? topic : 
+                     subcategory && /^\d{4}-\d{2}$/.test(subcategory) ? subcategory : null;
+  const isMonthBasedView = monthParam !== null;
+  
+  // For Banking Exams, if subcategory is a month, there's no actual subcategory
+  const actualSubcategory = subcategory && /^\d{4}-\d{2}$/.test(subcategory) ? undefined : subcategory;
   
   // Format month for display (2025-09 → September 2025)
   const formatMonthDisplay = (monthStr: string) => {
@@ -101,21 +108,21 @@ const CategoryMCQs = () => {
         query = query.eq('category', category);
       }
       
-      if (subcategory) {
-        query = query.eq('subcategory', subcategory);
+      if (actualSubcategory) {
+        query = query.eq('subcategory', actualSubcategory);
       }
       
       // Handle month-based view for Banking exams (YYYY-MM format)
-      if (isMonthBasedView && topic) {
+      if (isMonthBasedView && monthParam) {
         // Query for any date within the target month (handles any day of month)
-        const [year, month] = topic.split('-');
+        const [year, month] = monthParam.split('-');
         const startDate = `${year}-${month}-01`;
         const nextMonth = parseInt(month) === 12 ? '01' : String(parseInt(month) + 1).padStart(2, '0');
         const nextYear = parseInt(month) === 12 ? String(parseInt(year) + 1) : year;
         const endDate = `${nextYear}-${nextMonth}-01`;
         
         query = query.gte('month_year', startDate).lt('month_year', endDate);
-      } else if (topic) {
+      } else if (topic && !isMonthBasedView) {
         query = query.eq('topic', topic);
       }
       
@@ -143,6 +150,11 @@ const CategoryMCQs = () => {
         query = query.eq('category', 'Banking');
       } else {
         query = query.eq('category', category);
+      }
+      
+      // Don't filter by subcategory for Banking Current Affairs date query
+      if (actualSubcategory && category !== 'Banking Exams') {
+        query = query.eq('subcategory', actualSubcategory);
       }
 
       const { data, error } = await query;
@@ -173,11 +185,11 @@ const CategoryMCQs = () => {
         query = query.eq('category', category);
       }
       
-      if (subcategory) {
-        query = query.eq('subcategory', subcategory);
+      if (actualSubcategory) {
+        query = query.eq('subcategory', actualSubcategory);
       }
       
-      if (topic) {
+      if (topic && !isMonthBasedView) {
         query = query.eq('topic', topic);
       }
       
@@ -350,10 +362,16 @@ const CategoryMCQs = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
-              onClick={() => window.history.back()}
+              onClick={() => {
+                if (isMonthBasedView && category === 'Banking Exams') {
+                  navigate('/banking-current-affairs');
+                } else {
+                  window.history.back();
+                }
+              }}
             >
               <ChevronLeft className="w-4 h-4 mr-2" />
               {isMonthBasedView ? "Back to Months" : "Back to Home"}
@@ -361,20 +379,20 @@ const CategoryMCQs = () => {
             {!isMonthBasedView && (
               <div>
                 <h1 className="text-3xl font-bold">
-                  {topic ? topic : subcategory ? `${subcategory}` : `${category} MCQs`}
+                  {topic ? topic : actualSubcategory ? `${actualSubcategory}` : `${category} MCQs`}
                 </h1>
                 <p className="text-muted-foreground">
                   {topic ? `Practice ${topic} questions` 
-                    : subcategory ? `Practice ${subcategory} questions` 
+                    : actualSubcategory ? `Practice ${actualSubcategory} questions` 
                     : 'Practice questions and current affairs MCQs'}
                 </p>
               </div>
             )}
           </div>
           
-          {isMonthBasedView && (
-            <Link to={`/admin/banking-current-affairs?exam=${subcategory}&month=${topic}`}>
-              <Button variant="default">
+          {isMonthBasedView && category === 'Banking Exams' && (
+            <Link to="/admin/banking-current-affairs">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
                 Manage MCQs
               </Button>
             </Link>

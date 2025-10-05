@@ -15,6 +15,7 @@ import ExamTypesPage from "./pages/ExamTypesPage";
 import ExamSyllabusPage from "./pages/ExamSyllabusPage";
 import MonthlyCurrentAffairsPage from "./pages/MonthlyCurrentAffairsPage";
 import BankingCurrentAffairsManager from "./pages/BankingCurrentAffairsManager";
+import BankingCurrentAffairs from "./pages/BankingCurrentAffairs";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/static-gk-subcategories" element={<StaticGKSubcategories />} />
+            <Route path="/banking-current-affairs" element={<BankingCurrentAffairs />} />
             <Route path="/category/:category/:subcategory/:topic" element={<CategoryMCQs />} />
             <Route path="/category/:category/:subcategory" element={<CategoryMCQs />} />
             <Route path="/category/:category" element={<CategoryMCQs />} />
