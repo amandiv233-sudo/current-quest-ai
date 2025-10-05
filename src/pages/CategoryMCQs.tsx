@@ -92,8 +92,14 @@ const CategoryMCQs = () => {
       let query = supabase
         .from('manual_mcqs')
         .select('*')
-        .eq('category', category)
         .eq('is_active', true);
+      
+      // Handle category matching - "Banking Exams" in URL should match "Banking" in DB
+      if (category === 'Banking Exams') {
+        query = query.eq('category', 'Banking');
+      } else {
+        query = query.eq('category', category);
+      }
       
       if (subcategory) {
         query = query.eq('subcategory', subcategory);
@@ -126,14 +132,20 @@ const CategoryMCQs = () => {
 
   const fetchAvailableDates = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('manual_mcqs')
         .select('mcq_date')
-        .eq('category', category)
         .eq('is_active', true)
         .order('mcq_date', { ascending: false });
 
-      if (error) throw error;
+      // Handle category matching - "Banking Exams" in URL should match "Banking" in DB
+      if (category === 'Banking Exams') {
+        query = query.eq('category', 'Banking');
+      } else {
+        query = query.eq('category', category);
+      }
+
+      const { data, error } = await query;
       
       const uniqueDates = [...new Set(data?.map(item => item.mcq_date).filter(Boolean))];
       setAvailableDates(uniqueDates);
@@ -151,9 +163,15 @@ const CategoryMCQs = () => {
       let query = supabase
         .from('manual_mcqs')
         .select('*')
-        .eq('category', category)
         .eq('is_active', true)
         .eq('mcq_date', selectedDate);
+      
+      // Handle category matching - "Banking Exams" in URL should match "Banking" in DB
+      if (category === 'Banking Exams') {
+        query = query.eq('category', 'Banking');
+      } else {
+        query = query.eq('category', category);
+      }
       
       if (subcategory) {
         query = query.eq('subcategory', subcategory);
@@ -340,18 +358,18 @@ const CategoryMCQs = () => {
               <ChevronLeft className="w-4 h-4 mr-2" />
               {isMonthBasedView ? "Back to Months" : "Back to Home"}
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">
-                {isMonthBasedView ? formatMonthDisplay(topic!) : topic ? topic : subcategory ? `${subcategory}` : `${category} MCQs`}
-              </h1>
-              <p className="text-muted-foreground">
-                {isMonthBasedView 
-                  ? `Practice ${formatMonthDisplay(topic!)} questions` 
-                  : topic ? `Practice ${topic} questions` 
-                  : subcategory ? `Practice ${subcategory} questions` 
-                  : 'Practice questions and current affairs MCQs'}
-              </p>
-            </div>
+            {!isMonthBasedView && (
+              <div>
+                <h1 className="text-3xl font-bold">
+                  {topic ? topic : subcategory ? `${subcategory}` : `${category} MCQs`}
+                </h1>
+                <p className="text-muted-foreground">
+                  {topic ? `Practice ${topic} questions` 
+                    : subcategory ? `Practice ${subcategory} questions` 
+                    : 'Practice questions and current affairs MCQs'}
+                </p>
+              </div>
+            )}
           </div>
           
           {isMonthBasedView && (
@@ -363,19 +381,15 @@ const CategoryMCQs = () => {
           )}
         </div>
 
-        {/* Show tabs only for non-monthly views OR show only Current Affairs tab for monthly views */}
-        {isMonthBasedView ? (
+        {/* Show simple heading for monthly views */}
+        {isMonthBasedView && (
           <div className="mb-6">
-            <Card className="bg-card/50">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-center gap-2">
-                  <Trophy className="w-5 h-5 text-primary" />
-                  <CardTitle>Current Affairs ({filteredMCQs.length})</CardTitle>
-                </div>
-              </CardHeader>
-            </Card>
+            <h2 className="text-2xl font-semibold flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-primary" />
+              Current Affairs MCQs ({filteredMCQs.length})
+            </h2>
           </div>
-        ) : null}
+        )}
         
         {!isMonthBasedView && availableDates.length > 0 && (
           <Card className="mb-6">
