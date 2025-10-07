@@ -104,12 +104,12 @@ const TopicsPage = () => {
           <Link to={`/static-gk-subcategories`}>
             <Button variant="outline" size="sm">
               <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Sub-Categories
+                
             </Button>
           </Link>
           <div>
             <h1 className="text-3xl font-bold">{subcategory} Topics</h1>
-            <p className="text-muted-foreground">Choose a specific topic to practice</p>
+            <p className="text-muted-foreground"></p>
           </div>
         </div>
 

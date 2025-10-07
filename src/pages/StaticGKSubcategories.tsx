@@ -86,12 +86,12 @@ const StaticGKSubcategories = () => {
           <Link to="/">
             <Button variant="outline" size="sm">
               <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Home
+               
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Static GK Sub-Categories</h1>
-            <p className="text-muted-foreground">Choose a topic to practice MCQs</p>
+            <h1 className="text-3xl font-bold">Sub-Categories</h1>
+            <p className="text-muted-foreground"></p>
           </div>
         </div>
 

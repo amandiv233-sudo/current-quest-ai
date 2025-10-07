@@ -68,12 +68,12 @@ const MonthlyCurrentAffairsPage = () => {
           <Link to={`/exam-types/${category}`}>
             <Button variant="outline" size="sm">
               <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Exams
+               
             </Button>
           </Link>
           <div>
             <h1 className="text-3xl font-bold">{exam?.name} - Current Affairs</h1>
-            <p className="text-muted-foreground">Select a month to practice questions</p>
+            <p className="text-muted-foreground"> </p>
           </div>
         </div>
 

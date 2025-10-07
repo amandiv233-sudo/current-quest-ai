@@ -117,7 +117,7 @@ const Auth = () => {
           <Link to="/">
             <Button variant="outline" size="sm">
               <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Home
+               
             </Button>
           </Link>
         </div>

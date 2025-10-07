@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, BookOpen, Target } from "lucide-react";
+import { Calendar, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { XPBar } from "@/components/XPBar";
+import Confetti from "@/components/Confetti"; // Import the new Confetti component
 
 interface RecentMCQ {
   id: string;
@@ -24,9 +25,14 @@ interface RecentMCQ {
 export const RecentMCQsSection = () => {
   const [recentMCQs, setRecentMCQs] = useState<RecentMCQ[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAnswers, setShowAnswers] = useState<Record<string, boolean>>({});
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const { toast } = useToast();
+
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [disabledQuestions, setDisabledQuestions] = useState<Record<string, boolean>>({});
+  const [currentXP, setCurrentXP] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false); // State to trigger confetti
+  const maxXP = 60; 
 
   useEffect(() => {
     fetchRecentMCQs();
@@ -55,37 +61,66 @@ export const RecentMCQsSection = () => {
     }
   };
 
-  const handleAnswerSelect = (mcqId: string, answer: string) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [mcqId]: answer
-    }));
-  };
-
-  const toggleAnswer = (mcqId: string) => {
-    setShowAnswers(prev => ({
-      ...prev,
-      [mcqId]: !prev[mcqId]
-    }));
-  };
-
-  const getAnswerClass = (mcqId: string, option: string, isCorrect: boolean) => {
-    const isSelected = selectedAnswers[mcqId] === option;
-    const showAnswer = showAnswers[mcqId];
-    
-    if (!showAnswer) {
-      return isSelected ? "bg-primary/20 border-primary" : "hover:bg-muted/50";
-    }
-    
+  // Corrected playSound function
+  const playSound = (isCorrect: boolean) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
     if (isCorrect) {
-      return "bg-green-100 border-green-500 text-green-700";
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    } else {
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    }
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+  };
+
+  const handleAnswerSelect = (mcqId: string, answer: string, correctAnswer: string) => {
+    if (disabledQuestions[mcqId]) return;
+
+    setSelectedAnswers(prev => ({ ...prev, [mcqId]: answer }));
+    setDisabledQuestions(prev => ({ ...prev, [mcqId]: true }));
+
+    const isCorrect = answer === correctAnswer;
+    if (isCorrect) {
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      setCurrentXP(prev => Math.min(prev + 10, maxXP));
+      playSound(true);
+
+      // Trigger confetti on a 6-question streak
+      if (newStreak === 6) {
+        setShowConfetti(true);
+      }
+    } else {
+      setStreak(0); // Reset streak on wrong answer
+      playSound(false);
+    }
+  };
+
+  const getAnswerClass = (mcqId: string, option: string, correctAnswer: string) => {
+    const isSelected = selectedAnswers[mcqId] === option;
+    const isDisabled = disabledQuestions[mcqId];
+
+    if (!isDisabled) {
+      return 'border-border hover:bg-accent cursor-pointer';
     }
     
-    if (isSelected && !isCorrect) {
-      return "bg-red-100 border-red-500 text-red-700";
+    if (option === correctAnswer) {
+      return 'bg-green-100 border-green-500 text-green-800 cursor-not-allowed';
     }
     
-    return "opacity-50";
+    if (isSelected && option !== correctAnswer) {
+      return 'bg-red-100 border-red-500 text-red-800 cursor-not-allowed';
+    }
+    
+    return 'border-border cursor-not-allowed opacity-50';
   };
 
   if (loading) {
@@ -99,17 +134,13 @@ export const RecentMCQsSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-muted rounded w-full"></div>
-                    <div className="h-3 bg-muted rounded w-full"></div>
-                    <div className="h-3 bg-muted rounded w-full"></div>
-                    <div className="h-3 bg-muted rounded w-full"></div>
-                  </div>
-                </CardContent>
+                <CardHeader><div className="h-4 bg-muted rounded w-3/4"></div></CardHeader>
+                <CardContent><div className="space-y-2">
+                    <div className="h-8 bg-muted rounded w-full"></div>
+                    <div className="h-8 bg-muted rounded w-full"></div>
+                    <div className="h-8 bg-muted rounded w-full"></div>
+                    <div className="h-8 bg-muted rounded w-full"></div>
+                </div></CardContent>
               </Card>
             ))}
           </div>
@@ -119,7 +150,10 @@ export const RecentMCQsSection = () => {
   }
 
   return (
-    <section id="practice" className="py-16 bg-muted/30">
+    <section id="practice" className="py-16 bg-muted/30 relative pb-40">
+      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
+      {recentMCQs.length > 0 && <XPBar currentXP={currentXP} maxXP={maxXP} streak={streak} />}
+      
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Quick Practice Questions</h2>
@@ -140,7 +174,7 @@ export const RecentMCQsSection = () => {
                     </div>
                   </div>
                   <CardTitle className="text-lg leading-tight">{mcq.question}</CardTitle>
-                  <CardDescription className="flex items-center gap-2">
+                  <CardDescription className="flex items-center gap-2 pt-1">
                     <Calendar className="w-4 h-4" />
                     {new Date(mcq.mcq_date).toLocaleDateString()}
                   </CardDescription>
@@ -155,35 +189,37 @@ export const RecentMCQsSection = () => {
                     ].map(({ option, text }) => (
                       <button
                         key={option}
-                        onClick={() => handleAnswerSelect(mcq.id, option)}
-                        className={`w-full text-left p-3 rounded-lg border transition-colors ${getAnswerClass(mcq.id, option, mcq.correct_answer === option)}`}
-                        disabled={showAnswers[mcq.id]}
+                        onClick={() => handleAnswerSelect(mcq.id, option, mcq.correct_answer)}
+                        className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${getAnswerClass(mcq.id, option, mcq.correct_answer)}`}
+                        disabled={disabledQuestions[mcq.id]}
                       >
                         <span className="font-semibold">{option}.</span> {text}
                       </button>
                     ))}
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleAnswer(mcq.id)}
-                      className="flex-1"
-                    >
-                      <Target className="w-4 h-4 mr-2" />
-                      {showAnswers[mcq.id] ? 'Hide Answer' : 'Show Answer'}
-                    </Button>
-                  </div>
-                  
-                  {showAnswers[mcq.id] && (
-                    <div className="mt-4 p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium text-green-600 mb-2">
-                        Correct Answer: {mcq.correct_answer}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {mcq.explanation}
-                      </p>
+                  {disabledQuestions[mcq.id] && (
+                    <div className="mt-4 space-y-3 animate-fade-in">
+                       {selectedAnswers[mcq.id] !== mcq.correct_answer && (
+                         <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+                           <p className="font-bold text-destructive text-md">Streak Broken!</p>
+                         </div>
+                       )}
+                       {selectedAnswers[mcq.id] === mcq.correct_answer && (
+                         <div className="p-2 bg-green-100 dark:bg-green-900/20 border border-green-500/20 rounded-lg text-center">
+                           <p className="font-bold text-green-600 dark:text-green-400 text-md">
+                             {streak === 6 ? 'Perfect Streak! +10 XP' : '+10 XP'}
+                           </p>
+                         </div>
+                       )}
+                      <div className="p-3 bg-muted rounded-lg">
+                        <p className="text-sm font-medium text-green-600 mb-2">
+                          Correct Answer: {mcq.correct_answer}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {mcq.explanation}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </CardContent>

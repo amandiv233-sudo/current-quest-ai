@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { XPBar } from "@/components/XPBar";
+import Confetti from "@/components/Confetti"; // Import the Confetti component
 
 interface ManualMCQ {
   id: string;
@@ -43,15 +44,15 @@ const CategoryMCQs = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   
-  // XP Bar state
+  // XP Bar and Confetti state
   const [currentXP, setCurrentXP] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
   const maxXP = 100;
   
   // Check if this is a month-based view
-  // Either topic is in YYYY-MM format (old flow) OR subcategory is in YYYY-MM format (new Banking flow)
   const monthParam = topic && /^\d{4}-\d{2}$/.test(topic) ? topic : 
-                     subcategory && /^\d{4}-\d{2}$/.test(subcategory) ? subcategory : null;
+                   subcategory && /^\d{4}-\d{2}$/.test(subcategory) ? subcategory : null;
   const isMonthBasedView = monthParam !== null;
   
   // For Banking Exams, if subcategory is a month, there's no actual subcategory
@@ -248,9 +249,15 @@ const CategoryMCQs = () => {
     
     if (isCorrect) {
       // Correct answer: increase XP and streak
+      const newStreak = streak + 1;
+      setStreak(newStreak);
       setCurrentXP(prev => Math.min(prev + 10, maxXP));
-      setStreak(prev => prev + 1);
       playSound(true);
+
+      // Trigger confetti on a 10-question streak or multiples of 10
+      if (newStreak >= 10 && newStreak % 10 === 0) {
+        setShowConfetti(true);
+      }
     } else {
       // Incorrect answer: reset XP and streak
       setCurrentXP(0);
@@ -283,13 +290,13 @@ const CategoryMCQs = () => {
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{mcq.question}</CardTitle>
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <Badge variant={mcq.difficulty === 'easy' ? 'secondary' : mcq.difficulty === 'hard' ? 'destructive' : 'default'}>
               {mcq.difficulty}
             </Badge>
             <Badge variant="outline">{mcq.question_type.toUpperCase()}</Badge>
             {mcq.exam_year && <Badge variant="outline">{mcq.exam_year}</Badge>}
-          </div>
+          </div> */}
         </div>
         <CardDescription className="flex items-center gap-2">
           {mcq.subcategory && <span>{mcq.subcategory}</span>}
@@ -331,7 +338,9 @@ const CategoryMCQs = () => {
             )}
             {selectedAnswers[mcq.id] === mcq.correct_answer && (
               <div className="p-3 bg-green-100 dark:bg-green-900/20 border border-green-500/20 rounded-lg text-center">
-                <p className="font-bold text-green-600 dark:text-green-400 text-lg">+10 XP</p>
+                <p className="font-bold text-green-600 dark:text-green-400 text-lg">
+                  {streak > 0 && streak % 10 === 0 ? `Awesome! ${streak} Streak! +10 XP` : '+10 XP'}
+                </p>
               </div>
             )}
             <div className="p-4 bg-accent rounded-lg">
@@ -358,6 +367,7 @@ const CategoryMCQs = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
       <XPBar currentXP={currentXP} maxXP={maxXP} streak={streak} />
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -374,7 +384,7 @@ const CategoryMCQs = () => {
               }}
             >
               <ChevronLeft className="w-4 h-4 mr-2" />
-              {isMonthBasedView ? "Back to Months" : "Back to Home"}
+              {isMonthBasedView ? "Back to Months" : "Back"}
             </Button>
             {!isMonthBasedView && (
               <div>
@@ -399,16 +409,6 @@ const CategoryMCQs = () => {
           )}
         </div>
 
-        {/* Show simple heading for monthly views */}
-        {isMonthBasedView && (
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-primary" />
-              Current Affairs MCQs ({filteredMCQs.length})
-            </h2>
-          </div>
-        )}
-        
         {!isMonthBasedView && availableDates.length > 0 && (
           <Card className="mb-6">
             <CardContent className="pt-6">
@@ -442,7 +442,6 @@ const CategoryMCQs = () => {
           </Card>
         )}
 
-        {/* Show tabs only for non-monthly views */}
         {!isMonthBasedView ? (
           <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
