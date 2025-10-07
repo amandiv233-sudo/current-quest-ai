@@ -32,8 +32,8 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Popular Exams</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">SSC CGL</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Banking Exams</a></li>
+              <li><a href="" className="text-background/80 hover:text-background transition-colors">SSC CGL</a></li>
+              <li><a href="/banking-current-affairs" className="text-background/80 hover:text-background transition-colors">Banking Exams</a></li>
               <li><a href="#" className="text-background/80 hover:text-background transition-colors">Railway Exams</a></li>
               <li><a href="#" className="text-background/80 hover:text-background transition-colors">Defense Exams</a></li>
             </ul>
