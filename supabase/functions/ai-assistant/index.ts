@@ -60,10 +60,10 @@ serve(async (req) => {
                   4. Offering exam-specific tips and insights`
     };
 
-    const systemPrompt = systemPrompts[sessionType] || systemPrompts.general;
+    const systemPrompt = systemPrompts[sessionType as keyof typeof systemPrompts] || systemPrompts.general;
 
     // Prepare messages for Gemini
-    const prompt = `${systemPrompt}\n\nConversation History:\n${chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}\n\nUser: ${message}\n\nAssistant:`;
+    const prompt = `${systemPrompt}\n\nConversation History:\n${chatHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}\n\nUser: ${message}\n\nAssistant:`;
 
     // Call Gemini API
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -149,7 +149,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ai-assistant:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

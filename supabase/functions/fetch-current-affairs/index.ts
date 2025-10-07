@@ -53,13 +53,14 @@ serve(async (req) => {
         
         if (data.articles && data.articles.length > 0) {
           const processedArticles = data.articles
-            .filter(article => 
+            .filter((article: any) => 
               article.title && 
               article.description && 
+              article.url &&
               !article.title.includes('[Removed]') &&
               !article.description.includes('[Removed]')
             )
-            .map(article => ({
+            .map((article: any) => ({
               title: article.title,
               summary: article.description || article.title,
               content: article.content || article.description,
@@ -113,7 +114,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in fetch-current-affairs:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -174,7 +175,7 @@ function determinePriority(title: string, description: string): string {
 
 function extractTags(title: string, description: string): string[] {
   const text = (title + ' ' + description).toLowerCase();
-  const tags = [];
+  const tags: string[] = [];
   
   const tagKeywords = [
     'government', 'policy', 'election', 'economy', 'budget',
@@ -207,8 +208,8 @@ function determineExamRelevance(title: string, description: string, category: st
     'General': ['SSC CGL', 'UPSC', 'Banking']
   };
   
-  if (examMapping[category]) {
-    relevance.push(...examMapping[category]);
+  if (examMapping[category as keyof typeof examMapping]) {
+    relevance.push(...examMapping[category as keyof typeof examMapping]);
   }
   
   // Add general relevance

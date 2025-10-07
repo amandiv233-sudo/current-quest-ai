@@ -45,12 +45,15 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#categories" className="text-foreground hover:text-primary transition-colors">
-              Categories
-            </a>
-            <a href="#practice" className="text-foreground hover:text-primary transition-colors">
-              Practice Questions
-            </a>
+            <Link to="/" className="text-foreground hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link to="/static-gk-subcategories" className="text-foreground hover:text-primary transition-colors">
+              Static GK
+            </Link>
+            <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors">
+              Mock Tests
+            </Link>
             <Link to="/admin/mcqs" className="text-foreground hover:text-primary transition-colors">
               Manage MCQs
             </Link>
@@ -104,12 +107,15 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-slide-up">
             <nav className="flex flex-col space-y-3">
-              <a href="#categories" className="text-foreground hover:text-primary transition-colors px-2 py-1">
-                Categories
-              </a>
-              <a href="#practice" className="text-foreground hover:text-primary transition-colors px-2 py-1">
-                Practice Questions
-              </a>
+              <Link to="/" className="text-foreground hover:text-primary transition-colors px-2 py-1">
+                Home
+              </Link>
+              <Link to="/static-gk-subcategories" className="text-foreground hover:text-primary transition-colors px-2 py-1">
+                Static GK
+              </Link>
+              <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors px-2 py-1">
+                Mock Tests
+              </Link>
               <div className="flex flex-col space-y-2 pt-2">
                 {user ? (
                   <>
