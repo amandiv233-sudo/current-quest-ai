@@ -15,7 +15,7 @@ const HeroSection = () => {
           </h1>
           
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Your complete MCQ practice platform for SSC, Banking, Railway, Defense and all competitive exams
+            Your complete MCQ practice platform for SSC, Banking, Railway and all competitive exams
           </p>
 
           {/* CTA Buttons */}

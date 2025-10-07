@@ -19,6 +19,7 @@ import BankingCurrentAffairs from "./pages/BankingCurrentAffairs";
 import MockTestGenerator from "./pages/MockTestGenerator";
 import MockTest from "./pages/MockTest";
 import MockTestResult from "./pages/MockTestResult";
+import AdminSyllabusManager from "./pages/AdminSyllabusManager"; 
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/mock-test-generator" element={<MockTestGenerator />} />
             <Route path="/mock-test/:testId" element={<MockTest />} />
             <Route path="/mock-test-result/:testId" element={<MockTestResult />} />
+            <Route path="/admin/syllabus-manager" element={<AdminSyllabusManager />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -41,14 +41,7 @@ const categories = [
     color: "bg-purple-500", 
     count: "180+ MCQs"
   },
-  {
-    title: "Defense Exams",
-    name: "Defense Exams",
-    icon: Shield,
-    description: "NDA, CDS, AFCAT",
-    color: "bg-red-500",
-    count: "120+ MCQs"
-  },
+  
   {
     title: "Static GK",
     name: "Static GK",

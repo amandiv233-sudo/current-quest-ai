@@ -35,7 +35,6 @@ const Footer = () => {
               <li><a href="" className="text-background/80 hover:text-background transition-colors">SSC CGL</a></li>
               <li><a href="/banking-current-affairs" className="text-background/80 hover:text-background transition-colors">Banking Exams</a></li>
               <li><a href="#" className="text-background/80 hover:text-background transition-colors">Railway Exams</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Defense Exams</a></li>
             </ul>
           </div>
 

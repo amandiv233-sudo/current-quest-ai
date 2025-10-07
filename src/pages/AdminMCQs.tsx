@@ -38,7 +38,6 @@ const categories = [
   "Railway Exams",
   "SSC Exams",
   "Banking Exams",
-  "Defense Exams",
   "Books & Authors",
   "Sports",
   "International",
@@ -398,7 +397,27 @@ const AdminMCQs = () => {
             </div>
           </CardContent>
         </Card>
+        // src/pages/AdminMCQs.tsx
 
+// ... inside the main return statement, after the Banking Manager card, add this new one.
+
+<Card className="mb-6">
+  <CardContent className="pt-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="font-semibold text-lg mb-1">Exam Syllabus Manager</h3>
+        <p className="text-sm text-muted-foreground">
+          Define the syllabus for each exam by mapping Static GK subcategories.
+        </p>
+      </div>
+      <Link to="/admin/syllabus-manager">
+        <Button variant="outline">
+          Manage Syllabi
+        </Button>
+      </Link>
+    </div>
+  </CardContent>
+</Card>
         <Tabs defaultValue="manage" className="space-y-6">
           <TabsList>
             <TabsTrigger value="manage">Manage MCQs</TabsTrigger>

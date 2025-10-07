@@ -21,7 +21,6 @@ const CurrentAffairsSection = () => {
         'Railway Exams': 'Railway',
         'SSC Exams': 'SSC',
         'Banking Exams': 'Banking', 
-        'Defense Exams': 'Defense',
         'Books & Authors': 'Books',
         'Sports': 'Sports',
         'International': 'International',

@@ -1,25 +1,25 @@
+// src/pages/ExamSyllabusPage.tsx
+
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ChevronLeft, BookOpen } from "lucide-react";
+import { ChevronLeft, BookOpen, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Exam {
   name: string;
-  content_model: string;
 }
 
-interface SyllabusItem {
+interface SyllabusMapping {
   subcategory: string;
-  topic: string | null;
 }
 
 const ExamSyllabusPage = () => {
   const { category, examId } = useParams();
   const navigate = useNavigate();
   const [exam, setExam] = useState<Exam | null>(null);
-  const [syllabusItems, setSyllabusItems] = useState<SyllabusItem[]>([]);
+  const [syllabusSubcategories, setSyllabusSubcategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,49 +27,35 @@ const ExamSyllabusPage = () => {
   }, [examId]);
 
   const fetchExamAndSyllabus = async () => {
+    if (!examId) return;
     try {
-      // Fetch exam details with content_model
+      // Fetch exam details
       const { data: examData, error: examError } = await supabase
         .from('exams')
-        .select('name, content_model')
+        .select('name')
         .eq('id', examId)
         .single();
-
       if (examError) throw examError;
       setExam(examData);
 
-      // Redirect to monthly current affairs if this is a banking exam
-      if (examData.content_model === 'monthly_current_affairs') {
-        navigate(`/exam/${category}/${examId}/monthly-current-affairs`);
-        return;
-      }
-
-      // Fetch syllabus mappings
+      // Fetch mapped syllabus subcategories
       const { data: syllabusData, error: syllabusError } = await supabase
         .from('exam_syllabus_mappings')
-        .select('subcategory, topic')
+        .select('subcategory')
         .eq('exam_id', examId)
         .order('subcategory');
-
       if (syllabusError) throw syllabusError;
-      setSyllabusItems(syllabusData || []);
+      
+      // Get a unique list of subcategories
+      const uniqueSubcategories = [...new Set(syllabusData.map(item => item.subcategory))];
+      setSyllabusSubcategories(uniqueSubcategories);
+
     } catch (error) {
       console.error('Error fetching exam syllabus:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  // Group items by subcategory
-  const groupedSyllabus = syllabusItems.reduce((acc, item) => {
-    if (!acc[item.subcategory]) {
-      acc[item.subcategory] = [];
-    }
-    if (item.topic) {
-      acc[item.subcategory].push(item.topic);
-    }
-    return acc;
-  }, {} as Record<string, string[]>);
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,12 +64,12 @@ const ExamSyllabusPage = () => {
           <Link to={`/exam-types/${category}`}>
             <Button variant="outline" size="sm">
               <ChevronLeft className="w-4 h-4 mr-2" />
-               
+              Back to Exams
             </Button>
           </Link>
           <div>
             <h1 className="text-3xl font-bold">{exam?.name} Syllabus</h1>
-            <p className="text-muted-foreground"> </p>
+            <p className="text-muted-foreground">Select a subcategory to start practicing.</p>
           </div>
         </div>
 
@@ -92,34 +78,28 @@ const ExamSyllabusPage = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading syllabus...</p>
           </div>
-        ) : Object.keys(groupedSyllabus).length > 0 ? (
-          <div className="space-y-6">
-            {Object.entries(groupedSyllabus).map(([subcategory, topics], index) => (
+        ) : syllabusSubcategories.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {syllabusSubcategories.map((subcategory, index) => (
               <Card 
                 key={subcategory}
-                className="animate-fade-in"
+                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50 hover:border-primary/20 animate-fade-in"
                 style={{ animationDelay: `${index * 0.05}s` }}
+                onClick={() => navigate(`/topics/Static GK/${subcategory}`)}
               >
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-primary" />
-                    {subcategory}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {topics.map((topic) => (
-                      <Link 
-                        key={topic}
-                        to={`/category/Static GK/${subcategory}/${topic}`}
-                        className="block"
-                      >
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start hover:bg-primary/10"
-                        >
-                          {topic}
-                        </Button>
-                      </Link>
-                    ))}
+                  <div className="flex flex-col justify-between h-full">
+                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-3">
+                      <Layers className="w-5 h-5 text-primary" />
+                      {subcategory}
+                    </h2>
+                    <Button 
+                      variant="category" 
+                      size="sm" 
+                      className="w-full mt-auto"
+                    >
+                      View Topics
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -129,7 +109,7 @@ const ExamSyllabusPage = () => {
           <Card>
             <CardContent className="text-center py-12">
               <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">No syllabus topics found for this exam.</p>
+              <p className="text-muted-foreground">No syllabus has been mapped for this exam yet.</p>
             </CardContent>
           </Card>
         )}

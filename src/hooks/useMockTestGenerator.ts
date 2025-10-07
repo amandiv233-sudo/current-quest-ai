@@ -21,6 +21,8 @@ interface MockTestConfig {
   difficulty: string;
 }
 
+// src/hooks/useMockTestGenerator.ts
+
 export const useMockTestGenerator = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -28,7 +30,18 @@ export const useMockTestGenerator = () => {
   const generateMockTest = async (config: MockTestConfig) => {
     setLoading(true);
     try {
-      // Fetch manual MCQs for the selected category
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "You must be signed in to generate a mock test.",
+          variant: "destructive",
+        });
+        return null;
+      }
+
+      // ... (The code for fetching and filtering MCQs remains the same)
       const { data: mcqs, error: fetchError } = await supabase
         .from('manual_mcqs')
         .select('*')
@@ -46,7 +59,6 @@ export const useMockTestGenerator = () => {
         return null;
       }
 
-      // Filter by difficulty if specified
       let filteredMCQs = mcqs;
       if (config.difficulty !== 'mixed') {
         filteredMCQs = mcqs.filter(mcq => mcq.difficulty === config.difficulty);
@@ -61,11 +73,9 @@ export const useMockTestGenerator = () => {
         return null;
       }
 
-      // Randomly select questions
       const shuffled = [...filteredMCQs].sort(() => 0.5 - Math.random());
       const selectedQuestions = shuffled.slice(0, Math.min(config.numberOfQuestions, shuffled.length));
 
-      // Format questions for mock test
       const formattedQuestions = selectedQuestions.map(mcq => ({
         id: mcq.id,
         question: mcq.question,
@@ -87,11 +97,12 @@ export const useMockTestGenerator = () => {
         .insert({
           title: `${config.category} Mock Test - ${new Date().toLocaleDateString()}`,
           category: config.category,
-          difficulty: config.difficulty,
+          // NEW FIX: If difficulty is 'mixed', save null instead.
+          difficulty: config.difficulty === 'mixed' ? null : config.difficulty,
           total_questions: formattedQuestions.length,
           questions: formattedQuestions,
-          time_limit: formattedQuestions.length * 60, // 1 minute per question
-          created_by: null // Allow anonymous creation for now
+          time_limit: formattedQuestions.length * 60,
+          created_by: user.id
         })
         .select()
         .single();

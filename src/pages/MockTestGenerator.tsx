@@ -21,7 +21,6 @@ const MockTestGenerator = () => {
     "Banking",
     "SSC",
     "Railway",
-    "Defense",
     "Static GK",
     "Current Affairs"
   ];
