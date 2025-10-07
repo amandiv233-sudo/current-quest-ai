@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/AuthProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CategoryMCQs from "./pages/CategoryMCQs";
@@ -26,6 +27,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -48,11 +50,13 @@ const App = () => (
             <Route path="/mock-test/:testId" element={<MockTest />} />
             <Route path="/mock-test-result/:testId" element={<MockTestResult />} />
             <Route path="/admin/syllabus-manager" element={<AdminSyllabusManager />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </ThemeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

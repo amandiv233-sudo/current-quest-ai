@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { BookOpen, MessageCircle, User, Menu, X, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -61,6 +62,7 @@ const Header = () => {
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center space-x-3">
+            <ThemeToggle />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -116,6 +118,7 @@ const Header = () => {
               <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors px-2 py-1">
                 Mock Tests
               </Link>
+              <ThemeToggle />
               <div className="flex flex-col space-y-2 pt-2">
                 {user ? (
                   <>

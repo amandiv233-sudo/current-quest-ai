@@ -397,9 +397,6 @@ const AdminMCQs = () => {
             </div>
           </CardContent>
         </Card>
-        // src/pages/AdminMCQs.tsx
-
-// ... inside the main return statement, after the Banking Manager card, add this new one.
 
 <Card className="mb-6">
   <CardContent className="pt-6">

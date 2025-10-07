@@ -20,12 +20,15 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <a href="#categories">
-              <Button variant="hero" size="lg" className="text-lg px-8 py-4">
-                <BookOpen className="h-5 w-5 mr-2" />
-                Browse Categories
-              </Button>
-            </a>
+  <a href="#categories">
+    {/* Change variant="hero" to variant="secondary".
+      The "secondary" variant is designed to work well on both light and dark backgrounds.
+    */}
+    <Button variant="secondary" size="lg" className="text-lg px-8 py-4">
+      <BookOpen className="h-5 w-5 mr-2" />
+      Browse Categories
+    </Button>
+  </a>
             <a href="#practice">
               <Button variant="outline" size="lg" className="text-lg px-8 py-4 bg-white/10 border-white/20 text-white hover:bg-white/20">
                 <Trophy className="h-5 w-5 mr-2" />

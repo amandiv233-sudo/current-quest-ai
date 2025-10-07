@@ -277,6 +277,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       user_bookmarks: {
         Row: {
           article_id: string | null
@@ -352,6 +379,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_category_mcq_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          mcq_count: number
+        }[]
+      }
+      get_homepage_category_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category_name: string
+          mcq_count: number
+        }[]
+      }
       get_mcqs_for_exam: {
         Args: { p_exam_id: string }
         Returns: {
