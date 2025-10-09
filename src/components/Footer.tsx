@@ -2,8 +2,9 @@
 
 import { Link } from "react-router-dom"; // 1. Import the Link component
 import { BookOpen, Trophy, Brain } from "lucide-react";
-
+import { useUserRole } from "@/hooks/useUserRole"; 
 const Footer = () => {
+  const { role } = useUserRole();
   return (
     <footer className="bg-muted py-12 px-4">
       <div className="container mx-auto">
@@ -28,7 +29,9 @@ const Footer = () => {
               {/* 2. Replaced <a> with <Link> and updated paths */}
               <li><Link to="/#categories" className="text-muted-foreground hover:text-foreground transition-colors">Categories</Link></li>
               <li><Link to="/#practice" className="text-muted-foreground hover:text-foreground transition-colors">Practice Questions</Link></li>
-              <li><Link to="/admin/mcqs" className="text-muted-foreground hover:text-foreground transition-colors">Manage MCQs</Link></li>
+              {role === 'admin' && (
+      <li><Link to="/admin/mcqs">Manage MCQs</Link></li>
+    )}
             </ul>
           </div>
 
