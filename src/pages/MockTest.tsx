@@ -4,35 +4,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Clock, CheckCircle2 } from "lucide-react";
+import { Loader2, Clock, CheckCircle2, Flag, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 interface Question {
   id: string;
   question: string;
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
+  options: Record<string, string>;
   correct_answer: string;
-  explanation: string;
 }
 
 const MockTest = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+
   const [loading, setLoading] = useState(true);
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
+
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [markedForReview, setMarkedForReview] = useState<Record<number, boolean>>({});
+
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [submitted, setSubmitted] = useState(false);
 
@@ -83,20 +80,47 @@ const MockTest = () => {
       setLoading(false);
     }
   };
+  
+  const handleNext = () => {
+    setCurrentQuestion((prev) => Math.min(questions.length - 1, prev + 1));
+  };
+  
+  const handlePrevious = () => {
+    setCurrentQuestion((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleMarkForReview = () => {
+    setMarkedForReview(prev => ({ ...prev, [currentQuestion]: !prev[currentQuestion] }));
+    if(currentQuestion < questions.length - 1) {
+      handleNext();
+    }
+  };
 
   const handleSubmit = async () => {
+    if (submitted) return;
     setSubmitted(true);
     
     let score = 0;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    const negativeMark = test?.negative_marking_value || 0.25;
+
     questions.forEach((q, idx) => {
-      if (answers[idx] === q.correct_answer) {
-        score++;
+      if (answers[idx]) {
+        if (answers[idx] === q.correct_answer) {
+          score += 1;
+          correctCount++;
+        } else {
+          score -= negativeMark;
+          incorrectCount++;
+        }
       }
     });
 
+    const unansweredCount = questions.length - (correctCount + incorrectCount);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
         await supabase.from("user_test_attempts").insert({
           user_id: user.id,
@@ -109,7 +133,7 @@ const MockTest = () => {
       }
 
       navigate(`/mock-test-result/${testId}`, {
-        state: { score, total: questions.length, answers },
+        state: { score, total: questions.length, answers, correctCount, incorrectCount, unansweredCount },
       });
     } catch (error) {
       console.error("Error saving results:", error);
@@ -122,6 +146,17 @@ const MockTest = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getQuestionStatus = (index: number) => {
+    if (answers[index]) return 'answered';
+    if (markedForReview[index]) return 'review';
+    return 'unanswered';
+  };
+  
+  // Corrected and accurate count calculations
+  const answeredCount = Object.keys(answers).length;
+  const reviewCount = Object.keys(markedForReview).filter(key => markedForReview[Number(key)] && !answers[Number(key)]).length;
+  const unansweredCount = questions.length - answeredCount;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -130,99 +165,92 @@ const MockTest = () => {
     );
   }
 
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 container max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{test.title}</h1>
-            <p className="text-muted-foreground">
-              Question {currentQuestion + 1} of {questions.length}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <Clock className="h-5 w-5" />
-            <span className={timeRemaining < 60 ? "text-destructive" : ""}>
-              {formatTime(timeRemaining)}
-            </span>
-          </div>
-        </div>
-
-        <Progress value={progress} className="mb-6" />
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              {questions[currentQuestion]?.question}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RadioGroup
-              value={answers[currentQuestion] || ""}
-              onValueChange={(value) =>
-                setAnswers({ ...answers, [currentQuestion]: value })
-              }
-            >
-              {Object.entries(questions[currentQuestion]?.options || {}).map(
-                ([key, value]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <RadioGroupItem value={key} id={`option-${key}`} />
-                    <Label htmlFor={`option-${key}`} className="cursor-pointer flex-1">
-                      {key}. {value}
-                    </Label>
-                  </div>
-                )
-              )}
-            </RadioGroup>
-
-            <div className="flex justify-between pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentQuestion((prev) => Math.max(0, prev - 1))}
-                disabled={currentQuestion === 0}
-              >
-                Previous
-              </Button>
-
-              {currentQuestion === questions.length - 1 ? (
-                <Button onClick={handleSubmit} className="gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Submit Test
-                </Button>
-              ) : (
-                <Button
-                  onClick={() =>
-                    setCurrentQuestion((prev) =>
-                      Math.min(questions.length - 1, prev + 1)
-                    )
-                  }
-                >
-                  Next
-                </Button>
-              )}
+      <main className="flex-1 container max-w-6xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Question Panel */}
+          <div className="lg:col-span-3">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">{test.title}</h1>
+                <p className="text-muted-foreground">Question {currentQuestion + 1} of {questions.length}</p>
+              </div>
+              <div className="flex items-center gap-2 text-lg font-semibold">
+                <Clock className="h-5 w-5" /><span className={timeRemaining < 60 ? "text-destructive" : ""}>{formatTime(timeRemaining)}</span>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            {/* The Progress bar has been removed as requested */}
+            <Card>
+              <CardHeader><CardTitle className="text-lg">{questions[currentQuestion]?.question}</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <RadioGroup 
+                  value={answers[currentQuestion] || ""} 
+                  onValueChange={(value) => {
+                    // Set the new answer
+                    setAnswers(prev => ({ ...prev, [currentQuestion]: value }));
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {questions.map((_, idx) => (
-            <Button
-              key={idx}
-              variant={currentQuestion === idx ? "default" : "outline"}
-              size="sm"
-              className="w-10 h-10"
-              onClick={() => setCurrentQuestion(idx)}
-            >
-              {answers[idx] ? (
-                <CheckCircle2 className="h-4 w-4" />
-              ) : (
-                idx + 1
-              )}
-            </Button>
-          ))}
+                    // If the question was marked for review, un-mark it
+                    if (markedForReview[currentQuestion]) {
+                      setMarkedForReview(prev => {
+                        const newReviewState = { ...prev };
+                        delete newReviewState[currentQuestion];
+                        return newReviewState;
+                      });
+                    }
+                  }}
+                >
+                  {Object.entries(questions[currentQuestion]?.options || {}).map(([key, value]) => (
+                    <div key={key} className="flex items-center space-x-2 p-3 rounded-md border has-[:checked]:bg-primary/10 has-[:checked]:border-primary transition-colors">
+                      <RadioGroupItem value={key} id={`option-${key}`} />
+                      <Label htmlFor={`option-${key}`} className="cursor-pointer flex-1 text-base">{value}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+                <div className="flex justify-between items-center pt-4">
+                  <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0}>Previous</Button>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" onClick={handleMarkForReview}><Flag className="mr-2 h-4 w-4" />Mark for Review</Button>
+                    {currentQuestion === questions.length - 1 ? (
+                      <Button onClick={handleSubmit} className="gap-2"><CheckCircle2 className="h-4 w-4" />Submit Test</Button>
+                    ) : (
+                      <Button onClick={handleNext}>Next<ArrowRight className="ml-2 h-4 w-4" /></Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Status & Navigation Panel */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader><CardTitle>Test Status</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between text-sm"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-500"/>Answered</div><span className="font-bold">{answeredCount}</span></div>
+                  <div className="flex items-center justify-between text-sm"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-purple-500"/>Marked for Review</div><span className="font-bold">{reviewCount}</span></div>
+                  <div className="flex items-center justify-between text-sm"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-muted"/>Not Answered</div><span className="font-bold">{unansweredCount}</span></div>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {questions.map((_, idx) => {
+                    const status = getQuestionStatus(idx);
+                    let buttonClass = "border-border";
+                    if (currentQuestion === idx) buttonClass = "bg-primary text-primary-foreground hover:bg-primary/90 border-primary";
+                    else if (status === 'answered') buttonClass = "bg-green-500/20 border-green-500/50 text-foreground";
+                    else if (status === 'review') buttonClass = "bg-purple-500/20 border-purple-500/50 text-foreground";
+
+                    return (
+                      <Button key={idx} variant="outline" size="icon" className={`w-10 h-10 ${buttonClass}`} onClick={() => setCurrentQuestion(idx)}>
+                        {idx + 1}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
       <Footer />
