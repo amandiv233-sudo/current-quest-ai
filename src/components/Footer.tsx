@@ -1,10 +1,12 @@
 // src/components/Footer.tsx
 
-import { Link } from "react-router-dom"; // 1. Import the Link component
+import { Link } from "react-router-dom";
 import { BookOpen, Trophy, Brain } from "lucide-react";
-import { useUserRole } from "@/hooks/useUserRole"; 
+import { useUserRole } from "@/hooks/useUserRole"; // <-- Import the new hook
+
 const Footer = () => {
-  const { role } = useUserRole();
+  const { role } = useUserRole(); // <-- Use the new hook to get the role
+
   return (
     <footer className="bg-muted py-12 px-4">
       <div className="container mx-auto">
@@ -26,12 +28,11 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              {/* 2. Replaced <a> with <Link> and updated paths */}
               <li><Link to="/#categories" className="text-muted-foreground hover:text-foreground transition-colors">Categories</Link></li>
               <li><Link to="/#practice" className="text-muted-foreground hover:text-foreground transition-colors">Practice Questions</Link></li>
               {role === 'admin' && (
-      <li><Link to="/admin/mcqs">Manage MCQs</Link></li>
-    )}
+                <li><Link to="/admin/mcqs" className="text-muted-foreground hover:text-foreground transition-colors">Manage MCQs</Link></li>
+              )}
             </ul>
           </div>
 
@@ -39,7 +40,6 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Popular Exams</h3>
             <ul className="space-y-2 text-sm">
-              {/* 3. Replaced <a> with <Link> and updated paths */}
               <li><Link to="/exam-types/SSC Exams" className="text-muted-foreground hover:text-foreground transition-colors">SSC CGL</Link></li>
               <li><Link to="/banking-current-affairs" className="text-muted-foreground hover:text-foreground transition-colors">Banking Exams</Link></li>
               <li><Link to="/exam-types/Railway Exams" className="text-muted-foreground hover:text-foreground transition-colors">Railway Exams</Link></li>

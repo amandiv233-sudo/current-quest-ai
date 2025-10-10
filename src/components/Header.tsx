@@ -5,16 +5,31 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BookOpen, User, Menu, X, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
+import { useUserRole } from "@/hooks/useUserRole"; // <-- Import the new hook
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useUserRole } from "@/hooks/useUserRole";
+
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { role } = useUserRole(); 
+  const { role } = useUserRole(); // <-- Use the new hook to get the role
   const { toast } = useToast();
 
-  const handleSignOut = async () => { /* ... (This function is unchanged) */ };
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

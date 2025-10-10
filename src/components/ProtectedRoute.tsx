@@ -8,7 +8,6 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  // This component now fetches the role itself.
   const { role, loadingRole } = useUserRole();
 
   if (loadingRole) {
