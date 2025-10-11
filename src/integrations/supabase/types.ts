@@ -428,6 +428,17 @@ export type Database = {
           mcq_count: number
         }[]
       }
+      get_leaderboard: {
+        Args: { period: string }
+        Returns: {
+          avatar_url: string
+          average_score: number
+          rank: number
+          tests_taken: number
+          user_id: string
+          username: string
+        }[]
+      }
       get_mcqs_for_exam: {
         Args: { p_exam_id: string }
         Returns: {

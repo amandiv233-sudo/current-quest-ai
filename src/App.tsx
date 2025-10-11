@@ -25,6 +25,7 @@ import AuthProvider from "@/components/AuthProvider"; // Should have NO curly br
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 import ScrollToHashElement from "@/components/ScrollToHashElement";
+import LeaderboardPage from "./pages/LeaderboardPage"; // --- ADD THIS IMPORT ---
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,9 @@ const App = () => (
             <Route path="/mock-test-result/:testId" element={<MockTestResult />} />
             <Route path="/admin/syllabus-manager" element={<ProtectedRoute><AdminSyllabusManager /></ProtectedRoute>} />
             
+            {/* --- ADD NEW ROUTE HERE --- */}
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

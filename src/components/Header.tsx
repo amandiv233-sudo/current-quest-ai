@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, User, Menu, X, LogOut, Settings } from "lucide-react";
+import { BookOpen, User, Menu, X, LogOut, Settings, Trophy } from "lucide-react"; // --- ADD Trophy ---
 import { useAuth } from "@/components/AuthProvider";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
@@ -50,9 +50,9 @@ const Header = () => {
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-foreground hover:text-primary transition-colors">Home</Link>
-            {/* --- UPDATED LINK --- */}
-            <Link to="/#analytics" className="text-foreground hover:text-primary transition-colors">Analytics</Link>
             <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors">Mock Tests</Link>
+            {/* --- ADD NEW LINK HERE --- */}
+            <Link to="/leaderboard" className="text-foreground hover:text-primary transition-colors">Leaderboard</Link>
             {role === 'admin' && (
               <Link to="/admin/mcqs" className="text-foreground hover:text-primary transition-colors">Manage MCQs</Link>
             )}
@@ -83,9 +83,9 @@ const Header = () => {
           <div className="md:hidden py-4 border-t border-border animate-slide-up">
             <nav className="flex flex-col space-y-3 mb-4">
               <Link to="/" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-              {/* --- UPDATED LINK --- */}
-              <Link to="/#analytics" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Analytics</Link>
               <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Mock Tests</Link>
+              {/* --- ADD NEW LINK HERE (MOBILE) --- */}
+              <Link to="/leaderboard" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Leaderboard</Link>
             </nav>
             <div className="flex items-center justify-between pt-4 border-t">
               <ThemeToggle />
