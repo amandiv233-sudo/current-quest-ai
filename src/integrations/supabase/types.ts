@@ -470,6 +470,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      get_user_performance_stats: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       increment_view_count: {
         Args: { article_id: string }
         Returns: undefined

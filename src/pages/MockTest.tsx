@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Clock, CheckCircle2, Flag, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/components/AuthProvider"; // --- 1. IMPORT useAuth ---
 
 interface Question {
   id: string;
@@ -21,6 +22,7 @@ const MockTest = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth(); // --- 2. GET USER AND AUTH STATE ---
 
   const [loading, setLoading] = useState(true);
   const [test, setTest] = useState<any>(null);
@@ -33,11 +35,23 @@ const MockTest = () => {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [submitted, setSubmitted] = useState(false);
 
+  // --- 3. ADD EFFECT TO REQUIRE LOGIN ---
   useEffect(() => {
-    if (testId) {
+    if (!authLoading && !user) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to take a mock test.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate, toast]);
+
+  useEffect(() => {
+    if (testId && user) { // Only fetch if user exists
       fetchTest();
     }
-  }, [testId]);
+  }, [testId, user]);
 
   useEffect(() => {
     if (timeRemaining > 0 && !submitted) {
@@ -97,7 +111,7 @@ const MockTest = () => {
   };
 
   const handleSubmit = async () => {
-    if (submitted) return;
+    if (submitted || !user) return; // Also check for user here
     setSubmitted(true);
     
     let score = 0;
@@ -120,17 +134,15 @@ const MockTest = () => {
     const unansweredCount = questions.length - (correctCount + incorrectCount);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("user_test_attempts").insert({
-          user_id: user.id,
-          test_id: testId,
-          answers,
-          score,
-          total_questions: questions.length,
-          time_taken: test.time_limit - timeRemaining,
-        });
-      }
+      // User is guaranteed to exist here because of our earlier checks
+      await supabase.from("user_test_attempts").insert({
+        user_id: user.id,
+        test_id: testId,
+        answers,
+        score,
+        total_questions: questions.length,
+        time_taken: test.time_limit - timeRemaining,
+      });
 
       navigate(`/mock-test-result/${testId}`, {
         state: { score, total: questions.length, answers, correctCount, incorrectCount, unansweredCount },
@@ -152,17 +164,21 @@ const MockTest = () => {
     return 'unanswered';
   };
   
-  // Corrected and accurate count calculations
   const answeredCount = Object.keys(answers).length;
   const reviewCount = Object.keys(markedForReview).filter(key => markedForReview[Number(key)] && !answers[Number(key)]).length;
   const unansweredCount = questions.length - answeredCount;
 
-  if (loading) {
+  if (loading || authLoading) { // Show loader while checking auth
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
+  }
+
+  // If user is not logged in, this will be a blank screen before redirect
+  if (!user) {
+    return null;
   }
 
   return (
@@ -181,17 +197,13 @@ const MockTest = () => {
                 <Clock className="h-5 w-5" /><span className={timeRemaining < 60 ? "text-destructive" : ""}>{formatTime(timeRemaining)}</span>
               </div>
             </div>
-            {/* The Progress bar has been removed as requested */}
             <Card>
               <CardHeader><CardTitle className="text-lg">{questions[currentQuestion]?.question}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <RadioGroup 
                   value={answers[currentQuestion] || ""} 
                   onValueChange={(value) => {
-                    // Set the new answer
                     setAnswers(prev => ({ ...prev, [currentQuestion]: value }));
-
-                    // If the question was marked for review, un-mark it
                     if (markedForReview[currentQuestion]) {
                       setMarkedForReview(prev => {
                         const newReviewState = { ...prev };

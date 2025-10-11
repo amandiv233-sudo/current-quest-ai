@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, User, Menu, X, LogOut, Settings, Trophy } from "lucide-react"; // --- ADD Trophy ---
+import { BookOpen, User, Menu, X, LogOut, Settings, Trophy, LayoutDashboard } from "lucide-react"; // --- ADD Trophy ---
 import { useAuth } from "@/components/AuthProvider";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
@@ -65,6 +65,14 @@ const Header = () => {
                   <Button variant="default" size="sm"><User className="h-4 w-4 mr-2" />{user.email?.split('@')[0] || 'User'}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  {role === 'admin' && (
+                    <Link to="/admin/mcqs"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Admin MCQs</DropdownMenuItem></Link>
+                  )}
+                  <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
+                </DropdownMenuContent>
+                <DropdownMenuContent align="end" className="w-48">
+                  {/* --- ADD NEW LINK HERE --- */}
+                  <Link to="/dashboard"><DropdownMenuItem><LayoutDashboard className="h-4 w-4 mr-2" />My Dashboard</DropdownMenuItem></Link>
                   {role === 'admin' && (
                     <Link to="/admin/mcqs"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Admin MCQs</DropdownMenuItem></Link>
                   )}

@@ -26,7 +26,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 import ScrollToHashElement from "@/components/ScrollToHashElement";
 import LeaderboardPage from "./pages/LeaderboardPage"; // --- ADD THIS IMPORT ---
-
+import DashboardPage from "./pages/DashboardPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -60,7 +60,7 @@ const App = () => (
             
             {/* --- ADD NEW ROUTE HERE --- */}
             <Route path="/leaderboard" element={<LeaderboardPage />} />
-
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

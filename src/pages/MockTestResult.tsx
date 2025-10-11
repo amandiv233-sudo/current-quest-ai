@@ -1,38 +1,110 @@
-// src/pages/MockTestResult.tsx
-
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, CheckCircle2, XCircle, Home, SkipForward } from "lucide-react";
+import { Trophy, CheckCircle2, XCircle, Home, SkipForward, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Confetti from "@/components/Confetti";
+import { useAuth } from "@/components/AuthProvider";
+
+// Define a type for our result data
+interface ResultData {
+  score: number;
+  total: number;
+  answers: Record<number, string>;
+  correctCount: number;
+  incorrectCount: number;
+  unansweredCount: number;
+}
 
 const MockTestResult = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { testId } = useParams();
+  const { user } = useAuth();
+
   const [test, setTest] = useState<any>(null);
-  
-  const { score, total, answers, correctCount, incorrectCount, unansweredCount } = location.state || {};
+  const [result, setResult] = useState<ResultData | null>(location.state as ResultData);
+  const [loading, setLoading] = useState(!location.state); // Start loading if no state is passed
 
   useEffect(() => {
-    if (!location.state) {
-      navigate("/mock-test-generator");
-      return;
-    }
-    if (testId) {
+    // If we don't have results passed in state, fetch them.
+    if (!result && user && testId) {
+      setLoading(true);
+      const fetchAttemptAndTest = async () => {
+        try {
+          // Fetch the mock test details (contains questions and correct answers)
+          const { data: testData, error: testError } = await supabase
+            .from("mock_tests")
+            .select("*")
+            .eq("id", testId)
+            .single();
+
+          if (testError) throw testError;
+          setTest(testData);
+
+          // Fetch the user's latest attempt for this test
+          const { data: attemptData, error: attemptError } = await supabase
+            .from("user_test_attempts")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("test_id", testId)
+            .order("completed_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (attemptError) throw attemptError;
+
+          // Now, recalculate stats from the fetched data
+          let correctCount = 0;
+          let incorrectCount = 0;
+          const questions = testData.questions as any[];
+          const answers = attemptData.answers as Record<number, string>;
+
+          questions.forEach((q, idx) => {
+            if (answers[idx]) {
+              if (answers[idx] === q.correct_answer) {
+                correctCount++;
+              } else {
+                incorrectCount++;
+              }
+            }
+          });
+
+          const unansweredCount = questions.length - (correctCount + incorrectCount);
+
+          setResult({
+            score: attemptData.score,
+            total: attemptData.total_questions,
+            answers: answers,
+            correctCount,
+            incorrectCount,
+            unansweredCount,
+          });
+
+        } catch (error) {
+          console.error("Failed to fetch test result:", error);
+          navigate("/dashboard"); // Redirect to dashboard if fetching fails
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchAttemptAndTest();
+
+    } else if (testId) {
+      // If we have results from state, just fetch the test questions for review
       fetchTest();
     }
-  }, [testId, location.state, navigate]);
+  }, [testId, result, user, navigate]);
 
   const fetchTest = async () => {
     const { data } = await supabase
       .from("mock_tests")
-      .select("*")
+      .select("questions")
       .eq("id", testId)
       .single();
     if (data) {
@@ -40,10 +112,22 @@ const MockTestResult = () => {
     }
   };
 
-  if (score === undefined || total === undefined) {
-    return null; // or a loading state while redirecting
+  if (loading) {
+    return (
+       <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="ml-4 text-muted-foreground">Loading your result...</p>
+      </div>
+    );
   }
 
+  if (!result) {
+    // This can happen if the user isn't logged in and tries to access the page directly
+    useEffect(() => { navigate('/auth'); }, [navigate]);
+    return null;
+  }
+
+  const { score, total, answers, correctCount, incorrectCount, unansweredCount } = result;
   const percentage = total > 0 ? (score / total) * 100 : 0;
   const passed = percentage >= 40;
 
@@ -67,7 +151,7 @@ const MockTestResult = () => {
                 {score.toFixed(2)} / {total.toFixed(0)}
               </div>
               <div className="text-2xl text-muted-foreground">
-                {percentage.toFixed(1)}%
+                {percentage > 0 ? percentage.toFixed(1) : '0'}%
               </div>
             </div>
 
@@ -89,7 +173,7 @@ const MockTestResult = () => {
             </div>
 
             <div className="flex gap-4">
-              <Button onClick={() => navigate("/")} variant="outline" className="flex-1"><Home className="mr-2 h-4 w-4" />Home</Button>
+              <Button onClick={() => navigate("/dashboard")} variant="outline" className="flex-1"><Home className="mr-2 h-4 w-4" />Dashboard</Button>
               <Button onClick={() => navigate("/mock-test-generator")} className="flex-1">New Test</Button>
             </div>
           </CardContent>
@@ -108,23 +192,25 @@ const MockTestResult = () => {
                   <div
                     key={idx}
                     className={`p-4 rounded-lg border-2 ${
-                      isCorrect ? 'border-green-500/50 bg-green-500/5' : 'border-red-500/50 bg-red-500/5'
+                      !userAnswer ? 'border-slate-500/50 bg-slate-500/5' : isCorrect ? 'border-green-500/50 bg-green-500/5' : 'border-red-500/50 bg-red-500/5'
                     }`}
                   >
                     <div className="flex items-start gap-2 mb-2">
-                      {isCorrect ? (
+                      {!userAnswer ? (
+                         <SkipForward className="h-5 w-5 text-slate-500 mt-1" />
+                      ) : isCorrect ? (
                         <CheckCircle2 className="h-5 w-5 text-green-500 mt-1" />
                       ) : (
-                        <XCircle className="h-5 w-s5 text-red-500 mt-1" />
+                        <XCircle className="h-5 w-5 text-red-500 mt-1" />
                       )}
                       <div className="flex-1">
                         <p className="font-semibold mb-2">
                           Q{idx + 1}. {q.question}
                         </p>
                         <div className="space-y-1 text-sm">
-                          <p>
+                          <p className={`${!userAnswer ? 'text-slate-500' : isCorrect ? 'text-foreground' : 'text-destructive'}`}>
                             <span className="font-semibold">Your answer:</span>{" "}
-                            {userAnswer || "Not answered"} - {userAnswer ? q.options[userAnswer] : ""}
+                            {userAnswer ? `${userAnswer} - ${q.options[userAnswer]}` : "Not answered"}
                           </p>
                           <p className="text-green-600">
                             <span className="font-semibold">Correct answer:</span>{" "}
