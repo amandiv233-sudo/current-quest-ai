@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-//import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -21,12 +20,14 @@ import MockTestGenerator from "./pages/MockTestGenerator";
 import MockTest from "./pages/MockTest";
 import MockTestResult from "./pages/MockTestResult";
 import AdminSyllabusManager from "./pages/AdminSyllabusManager"; 
-import AuthProvider from "@/components/AuthProvider"; // Should have NO curly braces
+import AuthProvider from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AuthenticatedRoute from "@/components/AuthenticatedRoute"; // --- 1. IMPORT THE NEW COMPONENT ---
 import { RealtimeProvider } from "@/components/RealtimeProvider";
 import ScrollToHashElement from "@/components/ScrollToHashElement";
-import LeaderboardPage from "./pages/LeaderboardPage"; // --- ADD THIS IMPORT ---
+import LeaderboardPage from "./pages/LeaderboardPage";
 import DashboardPage from "./pages/DashboardPage";
+import MyBookmarksPage from "./pages/MyBookmarksPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -41,6 +42,12 @@ const App = () => (
         <ScrollToHashElement />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+
+            {/* --- 2. USE AuthenticatedRoute FOR THE DASHBOARD --- */}
+            <Route path="/dashboard" element={<AuthenticatedRoute><DashboardPage /></AuthenticatedRoute>} />
+             {/* --- ADD NEW ROUTE HERE --- */}
+            <Route path="/my-bookmarks" element={<AuthenticatedRoute><MyBookmarksPage /></AuthenticatedRoute>} />
             <Route path="/static-gk-subcategories" element={<StaticGKSubcategories />} />
             <Route path="/banking-current-affairs" element={<BankingCurrentAffairs />} />
             <Route path="/category/:category/:subcategory/:topic" element={<CategoryMCQs />} />
@@ -50,18 +57,17 @@ const App = () => (
             <Route path="/exam-types/:category" element={<ExamTypesPage />} />
             <Route path="/exam/:category/:examId/syllabus" element={<ExamSyllabusPage />} />
             <Route path="/exam/:category/:examId/monthly-current-affairs" element={<MonthlyCurrentAffairsPage />} />
+            
+            {/* Admin routes correctly use ProtectedRoute */}
             <Route path="/admin/mcqs" element={<ProtectedRoute><AdminMCQs /></ProtectedRoute>} />
             <Route path="/admin/banking-current-affairs" element={<ProtectedRoute><BankingCurrentAffairsManager /></ProtectedRoute>} />
+            <Route path="/admin/syllabus-manager" element={<ProtectedRoute><AdminSyllabusManager /></ProtectedRoute>} />
+            
             <Route path="/auth" element={<Auth />} />
             <Route path="/mock-test-generator" element={<MockTestGenerator />} />
             <Route path="/mock-test/:testId" element={<MockTest />} />
             <Route path="/mock-test-result/:testId" element={<MockTestResult />} />
-            <Route path="/admin/syllabus-manager" element={<ProtectedRoute><AdminSyllabusManager /></ProtectedRoute>} />
             
-            {/* --- ADD NEW ROUTE HERE --- */}
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

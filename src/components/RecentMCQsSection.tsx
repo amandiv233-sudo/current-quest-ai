@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, BookOpen } from "lucide-react";
+import { Calendar, BookOpen, Bookmark } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { XPBar } from "@/components/XPBar";
-import Confetti from "@/components/Confetti"; // Import the new Confetti component
+import Confetti from "@/components/Confetti";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/AuthProvider";
+import { useBookmarks } from "@/hooks/useBookmarks";
 
 interface RecentMCQ {
   id: string;
@@ -26,13 +29,15 @@ export const RecentMCQsSection = () => {
   const [recentMCQs, setRecentMCQs] = useState<RecentMCQ[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [disabledQuestions, setDisabledQuestions] = useState<Record<string, boolean>>({});
   const [currentXP, setCurrentXP] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false); // State to trigger confetti
-  const maxXP = 60; 
+  const [showConfetti, setShowConfetti] = useState(false);
+  const maxXP = 60;
 
   useEffect(() => {
     fetchRecentMCQs();
@@ -61,7 +66,6 @@ export const RecentMCQsSection = () => {
     }
   };
 
-  // Corrected playSound function
   const playSound = (isCorrect: boolean) => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -94,12 +98,11 @@ export const RecentMCQsSection = () => {
       setCurrentXP(prev => Math.min(prev + 10, maxXP));
       playSound(true);
 
-      // Trigger confetti on a 6-question streak
       if (newStreak === 6) {
         setShowConfetti(true);
       }
     } else {
-      setStreak(0); // Reset streak on wrong answer
+      setStreak(0);
       playSound(false);
     }
   };
@@ -162,69 +165,83 @@ export const RecentMCQsSection = () => {
         
         {recentMCQs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentMCQs.map((mcq) => (
-              <Card key={mcq.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex gap-2">
-                      <Badge variant="secondary">{mcq.category}</Badge>
-                      <Badge variant={mcq.difficulty === 'easy' ? 'secondary' : mcq.difficulty === 'hard' ? 'destructive' : 'default'}>
-                        {mcq.difficulty}
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg leading-tight">{mcq.question}</CardTitle>
-                  <CardDescription className="flex items-center gap-2 pt-1">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(mcq.mcq_date).toLocaleDateString()}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 mb-4">
-                    {[
-                      { option: 'A', text: mcq.option_a },
-                      { option: 'B', text: mcq.option_b },
-                      { option: 'C', text: mcq.option_c },
-                      { option: 'D', text: mcq.option_d }
-                    ].map(({ option, text }) => (
-                      <button
-                        key={option}
-                        onClick={() => handleAnswerSelect(mcq.id, option, mcq.correct_answer)}
-                        className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${getAnswerClass(mcq.id, option, mcq.correct_answer)}`}
-                        disabled={disabledQuestions[mcq.id]}
-                      >
-                        <span className="font-semibold">{option}.</span> {text}
-                      </button>
-                    ))}
-                  </div>
-                  
-                  {disabledQuestions[mcq.id] && (
-                    <div className="mt-4 space-y-3 animate-fade-in">
-                       {selectedAnswers[mcq.id] !== mcq.correct_answer && (
-                         <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
-                           <p className="font-bold text-destructive text-md">Streak Broken!</p>
-                         </div>
-                       )}
-                       {selectedAnswers[mcq.id] === mcq.correct_answer && (
-                         <div className="p-2 bg-green-100 dark:bg-green-900/20 border border-green-500/20 rounded-lg text-center">
-                           <p className="font-bold text-green-600 dark:text-green-400 text-md">
-                             {streak === 6 ? 'Perfect Streak! +10 XP' : '+10 XP'}
-                           </p>
-                         </div>
-                       )}
-                      <div className="p-3 bg-muted rounded-lg">
-                        <p className="text-sm font-medium text-green-600 mb-2">
-                          Correct Answer: {mcq.correct_answer}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {mcq.explanation}
-                        </p>
+            {recentMCQs.map((mcq) => {
+              const bookmarked = isBookmarked(mcq.id);
+              
+              return (
+                <Card key={mcq.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex gap-2 flex-wrap">
+                        <Badge variant="secondary">{mcq.category}</Badge>
+                        <Badge variant={mcq.difficulty === 'easy' ? 'secondary' : mcq.difficulty === 'hard' ? 'destructive' : 'default'}>
+                          {mcq.difficulty}
+                        </Badge>
                       </div>
+                      {user && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 -mt-1 -mr-1"
+                          onClick={() => bookmarked ? removeBookmark(mcq.id) : addBookmark(mcq.id)}
+                        >
+                          <Bookmark className={`h-5 w-5 transition-colors ${bookmarked ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+                        </Button>
+                      )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                    <CardTitle className="text-lg leading-tight">{mcq.question}</CardTitle>
+                    <CardDescription className="flex items-center gap-2 pt-1">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(mcq.mcq_date).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 mb-4">
+                      {[
+                        { option: 'A', text: mcq.option_a },
+                        { option: 'B', text: mcq.option_b },
+                        { option: 'C', text: mcq.option_c },
+                        { option: 'D', text: mcq.option_d }
+                      ].map(({ option, text }) => (
+                        <button
+                          key={option}
+                          onClick={() => handleAnswerSelect(mcq.id, option, mcq.correct_answer)}
+                          className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${getAnswerClass(mcq.id, option, mcq.correct_answer)}`}
+                          disabled={disabledQuestions[mcq.id]}
+                        >
+                          <span className="font-semibold">{option}.</span> {text}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {disabledQuestions[mcq.id] && (
+                      <div className="mt-4 space-y-3 animate-fade-in">
+                         {selectedAnswers[mcq.id] !== mcq.correct_answer && (
+                           <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+                             <p className="font-bold text-destructive text-md">Streak Broken!</p>
+                           </div>
+                         )}
+                         {selectedAnswers[mcq.id] === mcq.correct_answer && (
+                           <div className="p-2 bg-green-100 dark:bg-green-900/20 border border-green-500/20 rounded-lg text-center">
+                             <p className="font-bold text-green-600 dark:text-green-400 text-md">
+                               {streak === 6 ? 'Perfect Streak! +10 XP' : '+10 XP'}
+                             </p>
+                           </div>
+                         )}
+                        <div className="p-3 bg-muted rounded-lg">
+                          <p className="text-sm font-medium text-green-600 mb-2">
+                            Correct Answer: {mcq.correct_answer}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {mcq.explanation}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,24 +9,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Trophy, Shield, Percent } from "lucide-react";
+import { Database } from "@/integrations/supabase/types"; // --- 1. IMPORT Database TYPE ---
+
+// --- 2. THIS IS THE CORRECTED TYPE DEFINITION ---
+type LeaderboardEntry = Database["public"]["Functions"]["get_leaderboard"]["Returns"][number];
 
 type LeaderboardPeriod = "daily" | "weekly" | "all-time";
-
-interface LeaderboardEntry {
-  rank: number;
-  user_id: string;
-  username: string;
-  avatar_url: string | null;
-  average_score: number;
-  tests_taken: number;
-}
 
 const fetchLeaderboard = async (period: LeaderboardPeriod) => {
   const { data, error } = await supabase.rpc("get_leaderboard", { period });
   if (error) {
     throw new Error(error.message);
   }
-  return data as LeaderboardEntry[];
+  // The 'data' is now correctly typed, no 'as' casting needed.
+  return data;
 };
 
 const LeaderboardPage = () => {
@@ -38,7 +35,7 @@ const LeaderboardPage = () => {
 
   const getRankColor = (rank: number) => {
     if (rank === 1) return "text-yellow-400";
-    if (rank === 2) return "text-gray-400";
+    if (rank === 2) return "text-slate-400";
     if (rank === 3) return "text-orange-400";
     return "text-foreground";
   };
@@ -58,7 +55,7 @@ const LeaderboardPage = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <CardTitle>Top 50 Players</CardTitle>
-                <CardDescription>Rankings are based on average mock test scores.</CardDescription>
+                <CardDescription>Rankings are based on weighted average mock test scores.</CardDescription>
               </div>
               <div className="flex gap-2 p-1 bg-muted rounded-lg">
                 <Button size="sm" variant={period === "daily" ? "default" : "ghost"} onClick={() => setPeriod("daily")}>Daily</Button>
@@ -81,7 +78,7 @@ const LeaderboardPage = () => {
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i} className="animate-pulse">
-                      <TableCell><div className="h-6 bg-muted rounded"></div></TableCell>
+                      <TableCell><div className="h-6 bg-muted rounded w-1/2 mx-auto"></div></TableCell>
                       <TableCell><div className="h-6 bg-muted rounded"></div></TableCell>
                       <TableCell><div className="h-6 bg-muted rounded"></div></TableCell>
                       <TableCell><div className="h-6 bg-muted rounded"></div></TableCell>
@@ -91,23 +88,23 @@ const LeaderboardPage = () => {
                   leaderboard.map((entry) => (
                     <TableRow key={entry.user_id}>
                       <TableCell className="text-center">
-                        <span className={`text-lg font-bold ${getRankColor(entry.rank)}`}>
+                        <span className={`text-lg font-bold ${getRankColor(entry.rank || 0)}`}>
                           {entry.rank}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <Link to={`/profile/${entry.user_id}`} className="flex items-center gap-3 hover:underline">
                           <Avatar>
                             <AvatarImage src={entry.avatar_url || undefined} />
-                            <AvatarFallback>{entry.username.charAt(0).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>{entry.username?.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <span className="font-medium">{entry.username}</span>
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5 font-semibold text-primary">
                           <Percent className="h-4 w-4" />
-                          {entry.average_score.toFixed(2)}
+                          {entry.average_score?.toFixed(2)}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

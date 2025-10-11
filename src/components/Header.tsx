@@ -1,10 +1,9 @@
-// src/components/Header.tsx
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, User, Menu, X, LogOut, Settings, Trophy, LayoutDashboard } from "lucide-react"; // --- ADD Trophy ---
+import { BookOpen, User, Menu, X, LogOut, Settings, Trophy, LayoutDashboard, Bookmark } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +32,8 @@ const Header = () => {
       });
     }
   };
+  
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,13 +46,12 @@ const Header = () => {
             <Link to="/"><span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">MCQ Master</span></Link>
             <Badge variant="secondary" className="hidden sm:flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-              {visitorCount} visitor{visitorCount > 1 ? 's' : ''} online
+              {visitorCount} visitor{visitorCount !== 1 ? 's' : ''} online
             </Badge>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-foreground hover:text-primary transition-colors">Home</Link>
             <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors">Mock Tests</Link>
-            {/* --- ADD NEW LINK HERE --- */}
             <Link to="/leaderboard" className="text-foreground hover:text-primary transition-colors">Leaderboard</Link>
             {role === 'admin' && (
               <Link to="/admin/mcqs" className="text-foreground hover:text-primary transition-colors">Manage MCQs</Link>
@@ -65,18 +65,12 @@ const Header = () => {
                   <Button variant="default" size="sm"><User className="h-4 w-4 mr-2" />{user.email?.split('@')[0] || 'User'}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  {role === 'admin' && (
-                    <Link to="/admin/mcqs"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Admin MCQs</DropdownMenuItem></Link>
-                  )}
-                  <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
-                </DropdownMenuContent>
-                <DropdownMenuContent align="end" className="w-48">
-                  {/* --- ADD NEW LINK HERE --- */}
                   <Link to="/dashboard"><DropdownMenuItem><LayoutDashboard className="h-4 w-4 mr-2" />My Dashboard</DropdownMenuItem></Link>
+                  <Link to="/my-bookmarks"><DropdownMenuItem><Bookmark className="h-4 w-4 mr-2" />My Bookmarks</DropdownMenuItem></Link>
                   {role === 'admin' && (
                     <Link to="/admin/mcqs"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Admin MCQs</DropdownMenuItem></Link>
                   )}
-                  <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer text-red-500 focus:text-red-500"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -90,10 +84,24 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border animate-slide-up">
             <nav className="flex flex-col space-y-3 mb-4">
-              <Link to="/" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-              <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Mock Tests</Link>
-              {/* --- ADD NEW LINK HERE (MOBILE) --- */}
-              <Link to="/leaderboard" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Leaderboard</Link>
+              <Link to="/" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={closeMobileMenu}>Home</Link>
+              <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={closeMobileMenu}>Mock Tests</Link>
+              <Link to="/leaderboard" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={closeMobileMenu}>Leaderboard</Link>
+
+              {/* --- ADDED DASHBOARD AND BOOKMARKS LINKS FOR LOGGED-IN USERS --- */}
+              {user && (
+                <>
+                  <div className="px-2 pt-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase">My Account</h3>
+                  </div>
+                  <Link to="/dashboard" className="flex items-center text-foreground hover:text-primary transition-colors px-2 py-1" onClick={closeMobileMenu}>
+                    <LayoutDashboard className="h-4 w-4 mr-2" /> My Dashboard
+                  </Link>
+                  <Link to="/my-bookmarks" className="flex items-center text-foreground hover:text-primary transition-colors px-2 py-1" onClick={closeMobileMenu}>
+                    <Bookmark className="h-4 w-4 mr-2" /> My Bookmarks
+                  </Link>
+                </>
+              )}
             </nav>
             <div className="flex items-center justify-between pt-4 border-t">
               <ThemeToggle />

@@ -1,14 +1,12 @@
-// src/components/AuthProvider.tsx
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-// Note: userRole is no longer part of this context
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  // --- 1. UPDATE THE signUp FUNCTION SIGNATURE ---
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -43,8 +41,17 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+  // --- 2. UPDATE THE signUp FUNCTION LOGIC ---
+  const signUp = async (email: string, password: string, fullName: string) => {
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: {
+          full_name: fullName, // This data will be used by our database trigger
+        }
+      }
+    });
     return { error };
   };
 
@@ -62,7 +69,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-    </AuthContext.Provider> // <-- THE TYPO IS FIXED HERE
+    </AuthContext.Provider>
   );
 };
 

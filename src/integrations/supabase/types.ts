@@ -41,6 +41,35 @@ export type Database = {
         }
         Relationships: []
       }
+      bookmarked_mcqs: {
+        Row: {
+          created_at: string
+          id: number
+          mcq_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          mcq_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          mcq_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarked_mcqs_mcq_id_fkey"
+            columns: ["mcq_id"]
+            isOneToOne: false
+            referencedRelation: "manual_mcqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       current_affairs: {
         Row: {
           category: string
@@ -403,6 +432,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_bookmarked_mcqs: {
+        Args: { p_user_id: string }
+        Returns: {
+          category: string
+          correct_answer: string
+          created_at: string
+          created_by: string | null
+          difficulty: string | null
+          exam_year: number | null
+          explanation: string
+          id: string
+          is_active: boolean | null
+          mcq_date: string | null
+          mcq_type: string | null
+          month_year: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+          question_type: string | null
+          subcategory: string | null
+          tags: string[] | null
+          topic: string | null
+          updated_at: string
+        }[]
+      }
       get_category_mcq_counts: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -470,9 +526,31 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
-      get_user_performance_stats: {
+      get_user_category_performance: {
         Args: { p_user_id: string }
-        Returns: Json
+        Returns: {
+          average_score: number
+          category: string
+          tests_taken: number
+        }[]
+      }
+      get_user_overall_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          average_score: number
+          best_score: number
+          total_tests: number
+        }[]
+      }
+      get_user_recent_attempts: {
+        Args: { p_user_id: string }
+        Returns: {
+          completed_at: string
+          score: number
+          test_id: string
+          title: string
+          total_questions: number
+        }[]
       }
       increment_view_count: {
         Args: { article_id: string }

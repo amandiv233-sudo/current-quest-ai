@@ -12,18 +12,26 @@ import { useToast } from '@/hooks/use-toast';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [currentTab, setCurrentTab] = useState("signin");
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (user) {
       navigate('/');
     }
   }, [user, navigate]);
+  
+  // Clear fields when switching tabs
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setFullName('');
+  }, [currentTab]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +68,7 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password || !fullName) return;
 
     if (password.length < 6) {
       toast({
@@ -73,30 +81,20 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      const { error } = await signUp(email, password);
+      const { error } = await signUp(email, password, fullName);
       
       if (error) {
-        if (error.message?.includes('User already registered')) {
-          toast({
-            title: "Account already exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Sign Up Failed",
-            description: error.message || "Failed to create account",
-            variant: "destructive"
-          });
-        }
+        toast({
+          title: "Sign Up Failed",
+          description: error.message || "Failed to create account",
+          variant: "destructive"
+        });
       } else {
         toast({
           title: "Account created!",
           description: "Check your email to confirm your account, then sign in."
         });
-        // Clear form
-        setEmail('');
-        setPassword('');
+        setCurrentTab("signin"); // Switch to sign in tab after successful signup
       }
     } catch (error) {
       console.error('Sign up error:', error);
@@ -117,7 +115,7 @@ const Auth = () => {
           <Link to="/">
             <Button variant="outline" size="sm">
               <ChevronLeft className="w-4 h-4 mr-2" />
-               
+              Back to Home
             </Button>
           </Link>
         </div>
@@ -130,14 +128,14 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
                     <Input
@@ -168,11 +166,7 @@ const Auth = () => {
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>
@@ -184,7 +178,19 @@ const Auth = () => {
               </TabsContent>
               
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
+                <form onSubmit={handleSignUp} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-fullname">Full Name</Label>
+                    <Input
+                      id="signup-fullname"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
@@ -216,11 +222,7 @@ const Auth = () => {
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>
@@ -234,7 +236,7 @@ const Auth = () => {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Demo Mode: You can use the app without signing in, but authentication is available for full features.
+                Sign up to save your progress and compete on the leaderboard.
               </p>
             </div>
           </CardContent>
