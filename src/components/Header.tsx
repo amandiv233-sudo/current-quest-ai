@@ -3,17 +3,20 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { BookOpen, User, Menu, X, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
-import { useUserRole } from "@/hooks/useUserRole"; // <-- Import the new hook
+import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useRealtime } from "@/components/RealtimeProvider";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { role } = useUserRole(); // <-- Use the new hook to get the role
+  const { role } = useUserRole();
   const { toast } = useToast();
+  const { visitorCount } = useRealtime();
 
   const handleSignOut = async () => {
     try {
@@ -40,10 +43,15 @@ const Header = () => {
               <BookOpen className="h-5 w-5 text-white" />
             </div>
             <Link to="/"><span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">MCQ Master</span></Link>
+            <Badge variant="secondary" className="hidden sm:flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+              {visitorCount} visitor{visitorCount > 1 ? 's' : ''} online
+            </Badge>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-foreground hover:text-primary transition-colors">Home</Link>
-            <Link to="/static-gk-subcategories" className="text-foreground hover:text-primary transition-colors">Static GK</Link>
+            {/* --- UPDATED LINK --- */}
+            <Link to="/#analytics" className="text-foreground hover:text-primary transition-colors">Analytics</Link>
             <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors">Mock Tests</Link>
             {role === 'admin' && (
               <Link to="/admin/mcqs" className="text-foreground hover:text-primary transition-colors">Manage MCQs</Link>
@@ -60,7 +68,7 @@ const Header = () => {
                   {role === 'admin' && (
                     <Link to="/admin/mcqs"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Admin MCQs</DropdownMenuItem></Link>
                   )}
-                  <DropdownMenuItem onClick={handleSignOut}><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -75,7 +83,8 @@ const Header = () => {
           <div className="md:hidden py-4 border-t border-border animate-slide-up">
             <nav className="flex flex-col space-y-3 mb-4">
               <Link to="/" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-              <Link to="/static-gk-subcategories" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Static GK</Link>
+              {/* --- UPDATED LINK --- */}
+              <Link to="/#analytics" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Analytics</Link>
               <Link to="/mock-test-generator" className="text-foreground hover:text-primary transition-colors px-2 py-1" onClick={() => setIsMobileMenuOpen(false)}>Mock Tests</Link>
             </nav>
             <div className="flex items-center justify-between pt-4 border-t">

@@ -246,6 +246,7 @@ export type Database = {
           difficulty: string | null
           id: string
           is_public: boolean | null
+          negative_marking_value: number
           questions: Json
           time_limit: number | null
           title: string
@@ -258,6 +259,7 @@ export type Database = {
           difficulty?: string | null
           id?: string
           is_public?: boolean | null
+          negative_marking_value?: number
           questions: Json
           time_limit?: number | null
           title: string
@@ -270,10 +272,32 @@ export type Database = {
           difficulty?: string | null
           id?: string
           is_public?: boolean | null
+          negative_marking_value?: number
           questions?: Json
           time_limit?: number | null
           title?: string
           total_questions?: number
+        }
+        Relationships: []
+      }
+      page_visits: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: number
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: number
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -386,6 +410,17 @@ export type Database = {
           mcq_count: number
         }[]
       }
+      get_daily_category_visit_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          visit_count: number
+        }[]
+      }
+      get_daily_mock_test_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_homepage_category_counts: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -419,6 +454,10 @@ export type Database = {
           topic: string | null
           updated_at: string
         }[]
+      }
+      get_total_mock_test_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       increment_view_count: {
         Args: { article_id: string }

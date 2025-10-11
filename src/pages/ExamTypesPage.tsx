@@ -4,6 +4,7 @@ import { ChevronLeft, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { usePageTracking } from "@/hooks/usePageTracking";
 
 interface Exam {
   id: string;
@@ -14,6 +15,7 @@ interface Exam {
 
 const ExamTypesPage = () => {
   const { category } = useParams();
+  usePageTracking(category || 'Unknown'); 
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
 

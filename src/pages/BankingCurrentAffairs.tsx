@@ -2,9 +2,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePageTracking } from "@/hooks/usePageTracking";
 
 const BankingCurrentAffairs = () => {
   const navigate = useNavigate();
+  usePageTracking('Banking');
 
   // Generate last 12 months
   const generateMonths = () => {

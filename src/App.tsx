@@ -23,16 +23,21 @@ import MockTestResult from "./pages/MockTestResult";
 import AdminSyllabusManager from "./pages/AdminSyllabusManager"; 
 import AuthProvider from "@/components/AuthProvider"; // Should have NO curly braces
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { RealtimeProvider } from "@/components/RealtimeProvider";
+import ScrollToHashElement from "@/components/ScrollToHashElement";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+    <RealtimeProvider>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
+        <ScrollToHashElement />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/static-gk-subcategories" element={<StaticGKSubcategories />} />
@@ -58,6 +63,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
       </ThemeProvider>
+      </RealtimeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
