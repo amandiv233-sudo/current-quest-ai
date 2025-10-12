@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      badges: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       bookmarked_mcqs: {
         Row: {
           created_at: string
@@ -357,6 +381,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: number
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_bookmarks: {
         Row: {
           article_id: string | null
@@ -432,6 +485,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_badges_on_test_completion: {
+        Args: { p_test_attempt_id: string }
+        Returns: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+        }[]
+      }
       get_bookmarked_mcqs: {
         Args: { p_user_id: string }
         Returns: {
@@ -562,6 +625,16 @@ export type Database = {
       get_total_mock_test_count: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      get_user_badges: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+        }[]
       }
       get_user_category_performance: {
         Args: { p_user_id: string }

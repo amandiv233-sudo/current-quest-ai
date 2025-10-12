@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Clock, CheckCircle2, Flag, ArrowRight } from "lucide-react";
+import { useToast as useShadcnToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
+import { Loader2, Clock, CheckCircle2, Flag, ArrowRight, Footprints, Star, Medal } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useAuth } from "@/components/AuthProvider"; // --- 1. IMPORT useAuth ---
+import { useAuth } from "@/components/AuthProvider";
+import { Database } from "@/integrations/supabase/types";
+
+type Badge = Database['public']['Tables']['badges']['Row'];
 
 interface Question {
   id: string;
@@ -18,24 +22,27 @@ interface Question {
   correct_answer: string;
 }
 
+const iconMap: { [key: string]: React.ElementType } = {
+  Footprints,
+  Star,
+  Medal,
+};
+
 const MockTest = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth(); // --- 2. GET USER AND AUTH STATE ---
+  const { toast } = useShadcnToast();
+  const { user, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [markedForReview, setMarkedForReview] = useState<Record<number, boolean>>({});
-
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [submitted, setSubmitted] = useState(false);
 
-  // --- 3. ADD EFFECT TO REQUIRE LOGIN ---
   useEffect(() => {
     if (!authLoading && !user) {
       toast({
@@ -48,7 +55,7 @@ const MockTest = () => {
   }, [user, authLoading, navigate, toast]);
 
   useEffect(() => {
-    if (testId && user) { // Only fetch if user exists
+    if (testId && user) {
       fetchTest();
     }
   }, [testId, user]);
@@ -111,7 +118,7 @@ const MockTest = () => {
   };
 
   const handleSubmit = async () => {
-    if (submitted || !user) return; // Also check for user here
+    if (submitted || !user) return;
     setSubmitted(true);
     
     let score = 0;
@@ -134,21 +141,66 @@ const MockTest = () => {
     const unansweredCount = questions.length - (correctCount + incorrectCount);
 
     try {
-      // User is guaranteed to exist here because of our earlier checks
-      await supabase.from("user_test_attempts").insert({
-        user_id: user.id,
-        test_id: testId,
-        answers,
-        score,
-        total_questions: questions.length,
-        time_taken: test.time_limit - timeRemaining,
-      });
-
+      // Step A: Save the test attempt and get its ID back
+      const { data: attemptData, error: attemptError } = await supabase
+        .from("user_test_attempts")
+        .insert({
+          user_id: user.id,
+          test_id: testId,
+          answers,
+          score,
+          total_questions: questions.length,
+          time_taken: test.time_limit - timeRemaining,
+        })
+        .select('id')
+        .single();
+      
+      if (attemptError) throw attemptError;
+      
+      // Step B: Navigate to the result page immediately for good UX
       navigate(`/mock-test-result/${testId}`, {
         state: { score, total: questions.length, answers, correctCount, incorrectCount, unansweredCount },
       });
+
+      // Step C: In the background, call the function to check for new badges
+      const { data: newBadges, error: badgeError } = await supabase.rpc(
+        'award_badges_on_test_completion',
+        { p_test_attempt_id: attemptData.id }
+      );
+
+      if (badgeError) {
+        console.error("Error awarding badges:", badgeError);
+        return;
+      }
+      
+      // Step D: If new badges were awarded, show a notification for each one
+      if (newBadges && newBadges.length > 0) {
+        newBadges.forEach((badge: Badge, index) => {
+          setTimeout(() => {
+            const IconComponent = iconMap[badge.icon] || Star;
+            sonnerToast.success("Achievement Unlocked!", {
+              description: (
+                <div className="flex items-center gap-3">
+                  <IconComponent className="h-6 w-6 text-yellow-400" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{badge.name}</span>
+                    <span className="text-xs">{badge.description}</span>
+                  </div>
+                </div>
+              ),
+              duration: 5000,
+            });
+          }, index * 1000);
+        });
+      }
+
     } catch (error) {
-      console.error("Error saving results:", error);
+      console.error("Error submitting test:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error saving your test results.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -168,7 +220,7 @@ const MockTest = () => {
   const reviewCount = Object.keys(markedForReview).filter(key => markedForReview[Number(key)] && !answers[Number(key)]).length;
   const unansweredCount = questions.length - answeredCount;
 
-  if (loading || authLoading) { // Show loader while checking auth
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -176,7 +228,6 @@ const MockTest = () => {
     );
   }
 
-  // If user is not logged in, this will be a blank screen before redirect
   if (!user) {
     return null;
   }
@@ -194,11 +245,14 @@ const MockTest = () => {
                 <p className="text-muted-foreground">Question {currentQuestion + 1} of {questions.length}</p>
               </div>
               <div className="flex items-center gap-2 text-lg font-semibold">
-                <Clock className="h-5 w-5" /><span className={timeRemaining < 60 ? "text-destructive" : ""}>{formatTime(timeRemaining)}</span>
+                <Clock className="h-5 w-5" />
+                <span className={timeRemaining < 60 ? "text-destructive" : ""}>{formatTime(timeRemaining)}</span>
               </div>
             </div>
             <Card>
-              <CardHeader><CardTitle className="text-lg">{questions[currentQuestion]?.question}</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle className="text-lg">{questions[currentQuestion]?.question}</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-4">
                 <RadioGroup 
                   value={answers[currentQuestion] || ""} 
@@ -223,9 +277,13 @@ const MockTest = () => {
                 <div className="flex justify-between items-center pt-4">
                   <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0}>Previous</Button>
                   <div className="flex gap-2">
-                    <Button variant="secondary" onClick={handleMarkForReview}><Flag className="mr-2 h-4 w-4" />Mark for Review</Button>
+                    <Button variant="secondary" onClick={handleMarkForReview}>
+                      <Flag className="mr-2 h-4 w-4" />Mark for Review
+                    </Button>
                     {currentQuestion === questions.length - 1 ? (
-                      <Button onClick={handleSubmit} className="gap-2"><CheckCircle2 className="h-4 w-4" />Submit Test</Button>
+                      <Button onClick={handleSubmit} className="gap-2">
+                        <CheckCircle2 className="h-4 w-4" />Submit Test
+                      </Button>
                     ) : (
                       <Button onClick={handleNext}>Next<ArrowRight className="ml-2 h-4 w-4" /></Button>
                     )}
@@ -241,9 +299,24 @@ const MockTest = () => {
               <CardHeader><CardTitle>Test Status</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3 mb-6">
-                  <div className="flex items-center justify-between text-sm"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-500"/>Answered</div><span className="font-bold">{answeredCount}</span></div>
-                  <div className="flex items-center justify-between text-sm"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-purple-500"/>Marked for Review</div><span className="font-bold">{reviewCount}</span></div>
-                  <div className="flex items-center justify-between text-sm"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-muted"/>Not Answered</div><span className="font-bold">{unansweredCount}</span></div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-green-500"/>Answered
+                    </div>
+                    <span className="font-bold">{answeredCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-purple-500"/>Marked for Review
+                    </div>
+                    <span className="font-bold">{reviewCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-muted"/>Not Answered
+                    </div>
+                    <span className="font-bold">{unansweredCount}</span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-5 gap-2">
                   {questions.map((_, idx) => {

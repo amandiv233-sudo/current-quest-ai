@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { ChevronLeft, Plus, Edit, Trash2, Save, X, ChevronsLeft, ChevronLeftIcon, ChevronRight, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -173,17 +173,35 @@ const AdminMCQs = () => {
     mcq_date: new Date().toISOString().split('T')[0]
   });
   const { toast } = useToast();
-
+// --- 1. ADD STATE FOR PAGINATION ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 10;
+  // --- 2. UPDATE useEffect TO RE-FETCH ON PAGE CHANGE ---
   useEffect(() => {
     fetchMCQs();
-  }, []);
+  }, [currentPage]); // Re-run when currentPage changes
 
+  // --- 3. UPDATE fetchMCQs TO HANDLE PAGINATION ---
   const fetchMCQs = async () => {
     try {
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      // First, get the total count of MCQs
+      const { count, error: countError } = await supabase
+        .from('manual_mcqs')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      // Then, fetch the data for the current page
       const { data, error } = await supabase
         .from('manual_mcqs')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setMcqs(data || []);
@@ -196,7 +214,7 @@ const AdminMCQs = () => {
       });
     }
   };
-
+const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -707,6 +725,48 @@ const AdminMCQs = () => {
             </Card>
           )}
         </div>
+        {/* --- 4. ADD PAGINATION CONTROLS --- */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-end space-x-2 py-4">
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

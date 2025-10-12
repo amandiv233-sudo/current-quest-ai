@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -8,25 +9,34 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Award, Target, Activity, BarChart2, List, Loader2 } from "lucide-react";
+import { Award, Target, Activity, BarChart2, List, Loader2, Footprints, Star, Medal } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
 
-// Types remain the same, but they will now be used more effectively
+// Types for our data
 type OverallStats = Database["public"]["Functions"]["get_user_overall_stats"]["Returns"];
 type CategoryPerformance = Database["public"]["Functions"]["get_user_category_performance"]["Returns"];
 type RecentAttempts = Database["public"]["Functions"]["get_user_recent_attempts"]["Returns"];
+type UserBadges = Database["public"]["Functions"]["get_user_badges"]["Returns"];
+type Badge = UserBadges[number];
+
+// Helper to map icon names from the DB to actual components
+const iconMap: { [key: string]: React.ElementType } = {
+  Footprints,
+  Star,
+  Medal,
+};
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
 
-  // --- THIS IS THE FIX ---
-  // We destructure the results and use "as const" on the queries array
-  // for perfect type inference.
   const [
     overallStatsQuery,
     categoryPerformanceQuery,
-    recentAttemptsQuery
+    recentAttemptsQuery,
+    userBadgesQuery
   ] = useQueries({
     queries: [
       {
@@ -56,18 +66,28 @@ const DashboardPage = () => {
         },
         enabled: !!user,
       },
-    ] as const, // The "as const" is critical for type safety!
+      {
+        queryKey: ["userBadges", user?.id],
+        queryFn: async () => {
+          const { data, error } = await supabase.rpc("get_user_badges", { p_user_id: user!.id });
+          if (error) throw error;
+          return data;
+        },
+        enabled: !!user,
+      }
+    ] as const,
   });
 
   const isLoading = 
     overallStatsQuery.isLoading || 
     categoryPerformanceQuery.isLoading || 
-    recentAttemptsQuery.isLoading;
+    recentAttemptsQuery.isLoading ||
+    userBadgesQuery.isLoading;
 
-  // Now we can access the data directly, no more unsafe casting!
   const overallStats = overallStatsQuery.data;
   const categoryPerformance = categoryPerformanceQuery.data;
   const recentAttempts = recentAttemptsQuery.data;
+  const userBadges = userBadgesQuery.data as UserBadges | null;
   
   if (isLoading) {
     return (
@@ -134,9 +154,38 @@ const DashboardPage = () => {
           </Card>
         </div>
 
+        {/* My Achievements Section */}
+        {userBadges && userBadges.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />My Achievements
+              </CardTitle>
+              <CardDescription>Badges you've unlocked through your hard work. Click a badge to see details.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-4">
+              {userBadges.map((badge) => {
+                const IconComponent = iconMap[badge.icon] || Star;
+                return (
+                  <div
+                    key={badge.id}
+                    className="flex flex-col items-center gap-2 p-4 border rounded-lg w-28 text-center bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => setSelectedBadge(badge)}
+                  >
+                    <IconComponent className="h-8 w-8 text-yellow-400" />
+                    <span className="text-xs font-semibold truncate w-full">{badge.name}</span>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><BarChart2 className="h-5 w-5" />Category Performance</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart2 className="h-5 w-5" />Category Performance
+            </CardTitle>
             <CardDescription>Your average score in different test categories.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -161,7 +210,9 @@ const DashboardPage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><List className="h-5 w-5" />Recent Test History</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <List className="h-5 w-5" />Recent Test History
+            </CardTitle>
             <CardDescription>Your last 10 mock test attempts.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -193,6 +244,26 @@ const DashboardPage = () => {
         </Card>
       </main>
       <Footer />
+
+      {/* Badge Details Dialog */}
+      <Dialog open={!!selectedBadge} onOpenChange={(isOpen) => !isOpen && setSelectedBadge(null)}>
+        <DialogContent>
+          {selectedBadge && (
+            <>
+              <DialogHeader className="items-center text-center">
+                {(() => {
+                  const IconComponent = iconMap[selectedBadge.icon] || Star;
+                  return <IconComponent className="h-16 w-16 text-yellow-400 mb-4" />;
+                })()}
+                <DialogTitle className="text-2xl">{selectedBadge.name}</DialogTitle>
+                <DialogDescription className="pt-2">
+                  {selectedBadge.description}
+                </DialogDescription>
+              </DialogHeader>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

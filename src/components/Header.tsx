@@ -70,6 +70,12 @@ const Header = () => {
                   {role === 'admin' && (
                     <Link to="/admin/mcqs"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Admin MCQs</DropdownMenuItem></Link>
                   )}
+                  {/* --- ADD NEW SETTINGS LINK HERE --- */}
+                  <Link to="/settings"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Settings</DropdownMenuItem></Link>
+                  
+                  {role === 'admin' && (
+                    <Link to="/admin/mcqs"><DropdownMenuItem><Settings className="h-4 w-4 mr-2" />Admin Panel</DropdownMenuItem></Link>
+                  )}
                   <DropdownMenuItem onSelect={handleSignOut} className="cursor-pointer text-red-500 focus:text-red-500"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

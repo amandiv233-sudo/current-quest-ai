@@ -29,6 +29,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import DashboardPage from "./pages/DashboardPage";
 import MyBookmarksPage from "./pages/MyBookmarksPage";
 import PublicProfilePage from "./pages/PublicProfilePage";
+import UserSettingsPage from "./pages/UserSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,8 @@ const App = () => (
             <Route path="/dashboard" element={<AuthenticatedRoute><DashboardPage /></AuthenticatedRoute>} />
              {/* --- ADD NEW ROUTE HERE --- */}
             <Route path="/my-bookmarks" element={<AuthenticatedRoute><MyBookmarksPage /></AuthenticatedRoute>} />
+             {/* --- ADD NEW SETTINGS ROUTE HERE --- */}
+            <Route path="/settings" element={<AuthenticatedRoute><UserSettingsPage /></AuthenticatedRoute>} />
             <Route path="/static-gk-subcategories" element={<StaticGKSubcategories />} />
             <Route path="/banking-current-affairs" element={<BankingCurrentAffairs />} />
             <Route path="/category/:category/:subcategory/:topic" element={<CategoryMCQs />} />
