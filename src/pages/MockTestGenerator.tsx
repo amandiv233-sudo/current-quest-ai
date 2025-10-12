@@ -15,7 +15,7 @@ const MockTestGenerator = () => {
   const { generateMockTest, loading } = useMockTestGenerator();
   const [category, setCategory] = useState("");
   const [numberOfQuestions, setNumberOfQuestions] = useState("10");
-  const [difficulty, setDifficulty] = useState("mixed");
+  // --- REMOVED: The 'difficulty' state variable ---
 
   const categories = [
     "Banking",
@@ -31,7 +31,7 @@ const MockTestGenerator = () => {
     const result = await generateMockTest({
       category,
       numberOfQuestions: parseInt(numberOfQuestions),
-      difficulty
+      // --- REMOVED: The 'difficulty' property ---
     });
 
     if (result) {
@@ -77,25 +77,13 @@ const MockTestGenerator = () => {
                 type="number"
                 min="5"
                 max="50"
+                step="5"
                 value={numberOfQuestions}
                 onChange={(e) => setNumberOfQuestions(e.target.value)}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="difficulty">Difficulty Level</Label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger id="difficulty">
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mixed">Mixed</SelectItem>
-                  <SelectItem value="easy">Easy</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* --- REMOVED: The entire div for the "Difficulty Level" dropdown --- */}
 
             <Button
               onClick={handleGenerate}

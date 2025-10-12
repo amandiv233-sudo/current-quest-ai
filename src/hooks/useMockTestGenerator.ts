@@ -2,26 +2,10 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface MockTestQuestion {
-  id: string;
-  question: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_answer: string;
-  explanation: string;
-  difficulty: string;
-  category: string;
-}
-
 interface MockTestConfig {
   category: string;
   numberOfQuestions: number;
-  difficulty: string;
 }
-
-// src/hooks/useMockTestGenerator.ts
 
 export const useMockTestGenerator = () => {
   const [loading, setLoading] = useState(false);
@@ -41,7 +25,6 @@ export const useMockTestGenerator = () => {
         return null;
       }
 
-      // ... (The code for fetching and filtering MCQs remains the same)
       const { data: mcqs, error: fetchError } = await supabase
         .from('manual_mcqs')
         .select('*')
@@ -58,23 +41,20 @@ export const useMockTestGenerator = () => {
         });
         return null;
       }
+      
+      const filteredMCQs = mcqs;
 
-      let filteredMCQs = mcqs;
-      if (config.difficulty !== 'mixed') {
-        filteredMCQs = mcqs.filter(mcq => mcq.difficulty === config.difficulty);
-      }
+      const shuffled = [...filteredMCQs].sort(() => 0.5 - Math.random());
+      const selectedQuestions = shuffled.slice(0, Math.min(config.numberOfQuestions, shuffled.length));
 
-      if (filteredMCQs.length === 0) {
+      if (selectedQuestions.length === 0) {
         toast({
-          title: "No MCQs Available",
-          description: `No ${config.difficulty} MCQs found for ${config.category}.`,
+          title: "Not Enough Questions",
+          description: `Could not find enough questions for the ${config.category} category.`,
           variant: "destructive"
         });
         return null;
       }
-
-      const shuffled = [...filteredMCQs].sort(() => 0.5 - Math.random());
-      const selectedQuestions = shuffled.slice(0, Math.min(config.numberOfQuestions, shuffled.length));
 
       const formattedQuestions = selectedQuestions.map(mcq => ({
         id: mcq.id,
@@ -91,17 +71,17 @@ export const useMockTestGenerator = () => {
         category: mcq.category
       }));
 
-      // Save mock test to database
       const { data: mockTest, error: saveError } = await supabase
         .from('mock_tests')
         .insert({
           title: `${config.category} Mock Test - ${new Date().toLocaleDateString()}`,
           category: config.category,
-          // NEW FIX: If difficulty is 'mixed', save null instead.
-          difficulty: config.difficulty === 'mixed' ? null : config.difficulty,
+          difficulty: null,
           total_questions: formattedQuestions.length,
           questions: formattedQuestions,
-          time_limit: formattedQuestions.length * 60,
+          // --- THIS IS THE FIX ---
+          // Multiply by 60 to set the time limit in seconds (1 minute per question)
+          time_limit: formattedQuestions.length * 60, 
           created_by: user.id
         })
         .select()

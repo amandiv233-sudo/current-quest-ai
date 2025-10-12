@@ -473,6 +473,33 @@ export type Database = {
           visit_count: number
         }[]
       }
+      get_daily_challenge: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          correct_answer: string
+          created_at: string
+          created_by: string | null
+          difficulty: string | null
+          exam_year: number | null
+          explanation: string
+          id: string
+          is_active: boolean | null
+          mcq_date: string | null
+          mcq_type: string | null
+          month_year: string | null
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+          question_type: string | null
+          subcategory: string | null
+          tags: string[] | null
+          topic: string | null
+          updated_at: string
+        }[]
+      }
       get_daily_mock_test_count: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -520,6 +547,16 @@ export type Database = {
           tags: string[] | null
           topic: string | null
           updated_at: string
+        }[]
+      }
+      get_public_profile: {
+        Args: { p_user_id: string }
+        Returns: {
+          avatar_url: string
+          average_score: number
+          full_name: string
+          total_tests: number
+          username: string
         }[]
       }
       get_total_mock_test_count: {

@@ -28,6 +28,8 @@ import ScrollToHashElement from "@/components/ScrollToHashElement";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import DashboardPage from "./pages/DashboardPage";
 import MyBookmarksPage from "./pages/MyBookmarksPage";
+import PublicProfilePage from "./pages/PublicProfilePage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -43,7 +45,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
-
+            {/* --- ADD NEW PUBLIC PROFILE ROUTE HERE --- */}
+            <Route path="/profile/:userId" element={<PublicProfilePage />} />
             {/* --- 2. USE AuthenticatedRoute FOR THE DASHBOARD --- */}
             <Route path="/dashboard" element={<AuthenticatedRoute><DashboardPage /></AuthenticatedRoute>} />
              {/* --- ADD NEW ROUTE HERE --- */}
